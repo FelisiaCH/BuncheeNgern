@@ -707,7 +707,7 @@ option{background:#0E1526}
   </div>
 
   <div class="more-menu-sec">
-    <div class="more-menu-lbl" data-i18n="menuCredentials">🔑 Credentials</div>
+    <div class="more-menu-lbl" data-i18n="menuCredentials">⚙️ ตั้งค่า / Settings</div>
     <select id="more-script-select" class="fs" onchange="pickSavedScript(this.value)"
             aria-label="สลับสคริปต์ที่ใช้งาน" data-i18n-aria="menuActiveScript">
       <option value="" data-i18n="selectSavedScript">-- เลือกสคริปต์ที่บันทึกไว้ --</option>
@@ -717,6 +717,12 @@ option{background:#0E1526}
       <input type="text" id="m-script-url" class="fi" placeholder="Enter App Token or Script URL"
              autocomplete="off" data-i18n-placeholder="placeholderScriptUrl">
       <button type="button" class="script-save-btn" onclick="saveScriptUrl('m-script-url')" data-i18n="btnSaveScript">บันทึกสคริปต์</button>
+    </div>
+    <label class="fl" data-i18n="labelVapidKey">VAPID Public Key (สำหรับ Web Push)</label>
+    <div class="script-url-row">
+      <input type="text" id="m-vapid-key" class="fi" placeholder="Paste your VAPID public key"
+             autocomplete="off" data-i18n-placeholder="placeholderVapidKey">
+      <button type="button" class="script-save-btn" onclick="saveVapidKey()" data-i18n="btnSaveVapidKey">บันทึก VAPID Key</button>
     </div>
   </div>
 
@@ -1031,8 +1037,10 @@ option{background:#0E1526}
 // 🔧 Storage Keys, Branches & Constants
 const SCRIPTS_KEY       = 'savedScripts';
 const ACTIVE_SCRIPT_KEY = 'activeScriptUrl';
+const VAPID_KEY_STORAGE = 'vapidPublicKey';
 
 let SCRIPT_URL = localStorage.getItem(ACTIVE_SCRIPT_KEY) || '';
+let VAPID_PUBLIC_KEY = localStorage.getItem(VAPID_KEY_STORAGE) || '';
 
 const BRANCHES_KEY    = 'savedBranches';
 const DEFAULT_BRANCHES = ['สาขา 1', 'สาขา 2'];
@@ -1056,7 +1064,6 @@ const MAX_FILE_SIZE    = 5 * 1024 * 1024;
 const MAX_IMG_PX       = 1280;
 const IMG_QUALITY      = 0.82;
 const API_TIMEOUT      = 15000;
-const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY_HERE';
 
 // 🗂️ App & Dashboard State
 const A = {
@@ -1113,11 +1120,18 @@ const I18N = {
   toastScriptSaved:      { lo:'✅ ບັນທຶກສະຄຣິບສຳເລັດ!',  th:'✅ บันทึกสคริปต์สำเร็จ!', en:'✅ Script saved!' },
   toastScriptSwitched:   { lo:'🔄 ສະລັບສະຄຣິບທີ່ໃຊ້ງານແລ້ວ', th:'🔄 สลับสคริปต์ที่ใช้งานแล้ว', en:'🔄 Active script switched' },
 
+  labelVapidKey:         { lo:'VAPID Public Key (ສຳລັບ Web Push)', th:'VAPID Public Key (สำหรับ Web Push)', en:'VAPID Public Key (for Web Push)' },
+  placeholderVapidKey:   { lo:'ວາງ VAPID Public Key ຂອງທ່ານ', th:'วาง VAPID Public Key ของคุณ', en:'Paste your VAPID public key' },
+  btnSaveVapidKey:       { lo:'ບັນທຶກ VAPID Key',     th:'บันทึก VAPID Key',     en:'Save VAPID Key' },
+  warnEnterVapidKey:     { lo:'⚠️ ກະລຸນາປ້ອນ VAPID Public Key', th:'⚠️ กรุณากรอก VAPID Public Key', en:'⚠️ Please enter a VAPID public key' },
+  warnNoVapidKey:        { lo:'⚠️ ກະລຸນາບັນທຶກ VAPID Public Key ກ່ອນສະໝັກຮັບ', th:'⚠️ กรุณาบันทึก VAPID Public Key ก่อนสมัครรับการแจ้งเตือน', en:'⚠️ Please save a VAPID public key before subscribing' },
+  toastVapidSaved:       { lo:'✅ ບັນທຶກ VAPID Key ສຳເລັດ!', th:'✅ บันทึก VAPID Key สำเร็จ!', en:'✅ VAPID key saved!' },
+
   logoutTitle:           { lo:'ອອກຈາກລະບົບ',          th:'ออกจากระบบ',           en:'Log Out' },
   ariaMoreMenu:          { lo:'ເມນູເພີ່ມເຕີມ',         th:'เมนูเพิ่มเติม',         en:'More options' },
   menuLanguage:          { lo:'🌐 ພາສາ / Language',    th:'🌐 ภาษา / Language',    en:'🌐 Language Options' },
   menuActiveScript:      { lo:'ສະຄຣິບທີ່ໃຊ້ງານ',        th:'สคริปต์ที่ใช้งาน',       en:'Active Script' },
-  menuCredentials:       { lo:'🔑 ຂໍ້ມູນເຂົ້າສູ່ລະບົບ / Credentials', th:'🔑 ข้อมูลเชื่อมต่อ / Credentials', en:'🔑 Credentials' },
+  menuCredentials:       { lo:'⚙️ ການຕັ້ງຄ່າ / Settings', th:'⚙️ ตั้งค่า / Settings', en:'⚙️ Settings' },
   menuManagement:        { lo:'⚙️ ການຈັດການ / Management', th:'⚙️ การจัดการ / Management', en:'⚙️ Management' },
 
   placeholderNewBranch:  { lo:'ປ້ອນຊື່ສາຂາໃໝ່',         th:'กรอกชื่อสาขาใหม่',       en:'Enter new branch name' },
@@ -1501,6 +1515,11 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 async function subscribeToPush() {
+  if (!VAPID_PUBLIC_KEY) {
+    console.warn('[push] no VAPID public key configured');
+    showToast(t('warnNoVapidKey'), 'warn');
+    return;
+  }
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     console.warn('[push] PushManager not supported on this browser');
     showToast('Web Push not supported on this browser', 'err');
@@ -1526,6 +1545,11 @@ async function subscribeToPush() {
     localStorage.setItem('pushSubscription', JSON.stringify(sub));
     _showPushTokenPanel(sub);
     showToast('Push subscription active ✓', '');
+
+    // Persist to backend so onNewTransaction() can broadcast to this device
+    apiPost({ action: 'savePushSubscription', subscription: JSON.stringify(sub.toJSON ? sub.toJSON() : sub) })
+      .then(res => console.log('[push] subscription saved to backend:', res.status))
+      .catch(e  => console.warn('[push] failed to save subscription to backend:', e.message));
   } catch (e) {
     console.error('[push] subscribe failed:', e.message);
     showToast('Push subscribe failed: ' + e.message, 'err');
@@ -1742,6 +1766,14 @@ function renderScriptSelectors() {
   if ($('more-script-select')) $('more-script-select').innerHTML = opts;
 }
 
+function saveVapidKey() {
+  const raw = ($('m-vapid-key')?.value || '').trim();
+  if (!raw) { showToast(t('warnEnterVapidKey'), 'warn'); return; }
+  VAPID_PUBLIC_KEY = raw;
+  localStorage.setItem(VAPID_KEY_STORAGE, raw);
+  showToast(t('toastVapidSaved'));
+}
+
 async function saveScriptUrl(inputId = 'l-script-url') {
   const raw = ($(inputId)?.value || '').trim();
   if (!raw) { showToast(t('warnEnterScriptUrl'), 'warn'); return; }
@@ -1797,6 +1829,7 @@ async function init() {
   applyTranslations();
   $('l-script-url').value = SCRIPT_URL;
   $('m-script-url').value = SCRIPT_URL;
+  $('m-vapid-key').value  = VAPID_PUBLIC_KEY;
   renderScriptSelectors();
 
   if (!SCRIPT_URL) {

@@ -360,6 +360,15 @@ function onNewTransaction(e) {
   const title    = 'FinTrack — ' + shop;
   const body     = `${staff}: ${sign}${price.toLocaleString()} ${currency} (${itemName})`;
 
+  broadcastPushNotification_(title, body);
+}
+
+/**
+ * Sends a Web Push notification to every device stored in the
+ * "PushSubscriptions" sheet. Called by onNewTransaction so that any
+ * device — not just the one that submitted the entry — is notified.
+ */
+function broadcastPushNotification_(title, body) {
   const subscriptions = loadPushSubscriptions_();
   if (subscriptions.length === 0) {
     Logger.log('[WebPush] No subscriptions stored — skipping push');
