@@ -1030,6 +1030,9 @@ option{background:#0E1526}
   };
 })();
 
+// 🛠️ DOM Helper (must be defined before any early init calls below)
+const $ = id => document.getElementById(id);
+
 // 🔧 Storage Keys, Branches & Constants
 const SCRIPTS_KEY       = 'savedScripts';
 const ACTIVE_SCRIPT_KEY = 'activeScriptUrl';
@@ -1343,7 +1346,6 @@ function renderManageBranchesList() {
 }
 
 // 🛠️ DOM & Format Helpers
-const $  = id => document.getElementById(id);
 const p2 = n  => String(n).padStart(2,'0');
 
 function nowStamp() {
