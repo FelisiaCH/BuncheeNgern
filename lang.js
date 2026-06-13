@@ -8,18 +8,10 @@ const LANGS = {
 
 const I18N = {
   tagline:               { lo:'ລະບົບບັນຊີລາຍຮັບ-ລາຍຈ່າຍ', th:'ระบบบัญชีรายรับ-รายจ่าย', en:'Income & Expense Tracking System', vi:'Hệ thống Quản lý Thu Chi', my:'ဝင်ငွေနှင့် အသုံးစရိတ် မှတ်တမ်းစနစ်' },
-  googleSignInHint:      { lo:'ເຂົ້າສູ່ລະບົບດ້ວຍ Google (ບໍ່ບັງຄັບ)', th:'เข้าสู่ระบบด้วย Google (ไม่บังคับ)', en:'Sign in with Google (optional)', vi:'Đăng nhập bằng Google (không bắt buộc)', my:'Google ဖြင့် လော့ဂ်အင်ဝင်ပါ (မလိုအပ်)' },
+  googleSignInHint:      { lo:'ເຂົ້າສູ່ລະບົບດ້ວຍ Google ເພື່ອເລີ່ມໃຊ້ງານ', th:'เข้าสู่ระบบด้วย Google เพื่อเริ่มใช้งาน', en:'Sign in with Google to get started', vi:'Đăng nhập bằng Google để bắt đầu', my:'စတင်အသုံးပြုရန် Google ဖြင့် လော့ဂ်အင်ဝင်ပါ' },
   cfgBarMsg:             { lo:'⚙️ ກະລຸນາປ້ອນ ແລະ ບັນທຶກ Google Script URL ດ້ານລຸ່ມກ່ອນເຂົ້າສູ່ລະບົບ', th:'⚙️ กรุณากรอกและบันทึก Google Script URL ด้านล่างก่อนเข้าสู่ระบบ', en:'⚙️ Please enter and save a Google Script URL below before signing in', vi:'⚙️ Vui lòng nhập và lưu URL Google Script bên dưới trước khi đăng nhập', my:'⚙️ ဝင်ရောက်ရန် မီ အောက်ပါ Google Script URL ကို ရိုက်ထည့်ပြီး သိမ်းဆည်းပါ' },
   loadingGeneric:        { lo:'ກຳລັງດຳເນີນການ...', th:'กำลังดำเนินการ...', en:'Processing...', vi:'Đang xử lý...', my:'လုပ်ဆောင်နေသည်...' },
 
-  labelStaffName:        { lo:'ຊື່ພະນັກງານ', th:'ชื่อพนักงาน', en:'Staff Name', vi:'Tên nhân viên', my:'ဝန်ထမ်းအမည်' },
-  placeholderStaffName:  { lo:'ປ້ອນຊື່ພະນັກງານ', th:'กรอกชื่อพนักงาน', en:'Enter staff name', vi:'Nhập tên nhân viên', my:'ဝန်ထမ်းအမည်ထည့်ပါ' },
-  labelPin:              { lo:'ລະຫັດ PIN', th:'รหัส PIN', en:'PIN Code', vi:'Mã PIN', my:'PIN ကုဒ်' },
-  ariaTogglePin:         { lo:'ສະແດງ/ເຊື່ອງລະຫັດ PIN', th:'แสดง/ซ่อนรหัส PIN', en:'Show/Hide PIN', vi:'Hiện/Ẩn mã PIN', my:'PIN ပြ/ဖျောက်' },
-  rememberMe:            { lo:'ຈື່ຂ້ອຍໄວ້ໃນລະບົບ', th:'จำฉันไว้ในระบบ', en:'Remember Me', vi:'Ghi nhớ đăng nhập', my:'မှတ်ထားပါ' },
-  rememberMeGloss:       { lo:'Remember Me', th:'Remember Me', en:'', vi:'', my:'' },
-  loginBtn:              { lo:'ເຂົ້າສູ່ລະບົບ', th:'เข้าสู่ระบบ', en:'Sign In', vi:'Đăng nhập', my:'လော့ဂ်အင်' },
-  loginBtnLocked:        { lo:'ບັນຊີຖືກລັອກ', th:'บัญชีถูกล็อก', en:'Account Locked', vi:'Tài khoản bị khóa', my:'အကောင့်ကို ပိတ်ထားသည်' },
   footerCopy:            { lo:'© 2026 FelisiaCH — ເຜີຍແຜ່ພາຍໃຕ້ໃບອະນຸຍາດ MIT', th:'© 2026 FelisiaCH — เผยแพร่ภายใต้สัญญาอนุญาต MIT', en:'© 2026 FelisiaCH — Released under the MIT License', vi:'© 2026 FelisiaCH — Phát hành theo Giấy phép MIT', my:'© 2026 FelisiaCH — MIT လိုင်စင်အောက်တွင် ထုတ်ပြန်ထားသည်' },
 
   labelScriptUrl:        { lo:'App Token or Web App URL / ໂທເຄັນແອັບ ຫຼື ລິ້ງ Web App URL', th:'App Token or Web App URL / ใส่รหัสโทเค็น หรือ ลิงก์ URL', en:'App Token or Web App URL', vi:'App Token hoặc URL Web App', my:'App Token သို့မဟုတ် Web App URL' },
@@ -28,7 +20,6 @@ const I18N = {
   selectSavedScript:     { lo:'-- ເລືອກສະຄຣິບທີ່ບັນທຶກໄວ້ --', th:'-- เลือกสคริปต์ที่บันทึกไว้ --', en:'-- Select a saved script --', vi:'-- Chọn script đã lưu --', my:'-- သိမ်းထားသော Script ရွေးပါ --' },
   promptScriptNickname:  { lo:'ຕັ້ງຊື່ສະຄຣິບນີ້ (ເຊັ່ນ: Sheet Main)', th:'ตั้งชื่อเล่นให้สคริปต์นี้ (เช่น Sheet Main)', en:'Give this script a nickname (e.g. Sheet Main)', vi:'Đặt tên gợi nhớ cho script này (ví dụ: Sheet Main)', my:'ဤ Script အတွက် အမည်ပေးပါ (ဥပမာ - Sheet Main)' },
   warnEnterScriptUrl:    { lo:'⚠️ ກະລຸນາປ້ອນ Google Script URL', th:'⚠️ กรุณากรอก Google Script URL', en:'⚠️ Please enter a Google Script URL', vi:'⚠️ Vui lòng nhập URL Google Script', my:'⚠️ Google Script URL ကို ရိုက်ထည့်ပါ' },
-  warnNoScriptUrl:       { lo:'⚠️ ກະລຸນາບັນທຶກ ແລະ ເລືອກ Google Script URL ກ່ອນ', th:'⚠️ กรุณาบันทึกและเลือก Google Script URL ก่อน', en:'⚠️ Please save and select a Google Script URL first', vi:'⚠️ Vui lòng lưu và chọn URL Google Script trước', my:'⚠️ ဦးစွာ Google Script URL ကို သိမ်းပြီး ရွေးချယ်ပါ' },
   toastScriptSaved:      { lo:'✅ ບັນທຶກສະຄຣິບສຳເລັດ!', th:'✅ บันทึกสคริปต์สำเร็จ!', en:'✅ Script saved!', vi:'✅ Đã lưu script!', my:'✅ Script သိမ်းပြီးပါပြီ!' },
   toastScriptSwitched:   { lo:'🔄 ສະລັບສະຄຣິບທີ່ໃຊ້ງານແລ້ວ', th:'🔄 สลับสคริปต์ที่ใช้งานแล้ว', en:'🔄 Active script switched', vi:'🔄 Đã chuyển script đang dùng', my:'🔄 အသုံးပြုနေသော Script ပြောင်းပြီးပါပြီ' },
 
@@ -89,12 +80,6 @@ const I18N = {
   themeDark:             { lo:'ໂໝດມືດ', th:'โหมดมืด', en:'Dark Mode', vi:'Chế độ tối', my:'အမှောင်မုဒ်' },
   ariaToggleTheme:       { lo:'ສະລັບໂໝດສີ', th:'สลับธีม', en:'Toggle theme', vi:'Chuyển chủ đề', my:'အပြင်အဆင် ပြောင်းရန်' },
 
-  errConnectSheets:      { lo:'❌ ເຊື່ອມຕໍ່ Google Sheets ບໍ່ໄດ້', th:'❌ เชื่อมต่อ Google Sheets ไม่ได้', en:'❌ Could not connect to Google Sheets', vi:'❌ Không thể kết nối với Google Sheets', my:'❌ Google Sheets သို့ ချိတ်ဆက်၍ မရပါ' },
-  errAccountLocked:      { lo:'🔒 ບັນຊີຖືກລັອກຊົ່ວຄາວ ກະລຸນາຕິດຕໍ່ແອັດມິນ', th:'🔒 บัญชีถูกล็อกชั่วคราว กรุณาติดต่อแอดมิน', en:'🔒 Account temporarily locked. Please contact admin', vi:'🔒 Tài khoản tạm thời bị khóa. Vui lòng liên hệ quản trị viên', my:'🔒 အကောင့်ကို ယာယီပိတ်ထားသည်။ admin ကို ဆက်သွယ်ပါ' },
-  warnEnterStaffName:    { lo:'⚠️ ກະລຸນາປ້ອນຊື່ພະນັກງານ', th:'⚠️ กรุณากรอกชื่อพนักงาน', en:'⚠️ Please enter your staff name', vi:'⚠️ Vui lòng nhập tên nhân viên', my:'⚠️ ဝန်ထမ်းအမည်ကို ထည့်ပါ' },
-  warnEnterPin:          { lo:'⚠️ ກະລຸນາປ້ອນລະຫັດ PIN', th:'⚠️ กรุณากรอกรหัส PIN', en:'⚠️ Please enter your PIN', vi:'⚠️ Vui lòng nhập mã PIN', my:'⚠️ PIN ကိုထည့်ပါ' },
-  errWrongPin:           { lo:'❌ ລະຫັດ PIN ບໍ່ຖືກຕ້ອງ ກະລຸນາລອງໃໝ່ອີກຄັ້ງ', th:'❌ รหัส PIN ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง', en:'❌ Incorrect PIN. Please try again', vi:'❌ Mã PIN không đúng. Vui lòng thử lại', my:'❌ PIN မှားနေသည်။ ပြန်ကြိုးစားပါ' },
-  attemptsLeft:          { lo:'ຍັງເຫຼືອອີກ {n} ຄັ້ງກ່ອນຖືກລັອກ', th:'เหลืออีก {n} ครั้งก่อนถูกล็อก', en:'{n} attempt(s) left before lockout', vi:'Còn {n} lần thử trước khi bị khóa', my:'ပိတ်ခြင်းမခံမီ {n} ကြိမ် ကျန်ရှိသည်' },
   errGeneric:            { lo:'❌ ເກີດຂໍ້ຜິດພາດ: {msg}', th:'❌ เกิดข้อผิดพลาด: {msg}', en:'❌ An error occurred: {msg}', vi:'❌ Đã xảy ra lỗi: {msg}', my:'❌ အမှားအယွင်း ဖြစ်ပွားသည်- {msg}' },
   confirmLogout:         { lo:'ທ່ານຕ້ອງການອອກຈາກລະບົບແທ້ບໍ?', th:'ต้องการออกจากระบบหรือไม่?', en:'Are you sure you want to log out?', vi:'Bạn có chắc muốn đăng xuất?', my:'ထွက်မှာ သေချာပါသလား?' },
   errFileTooLarge:       { lo:'❌ ໄຟລ໌ໃຫຍ່ເກີນ 5 MB', th:'❌ ไฟล์ใหญ่เกิน 5 MB', en:'❌ File exceeds 5 MB', vi:'❌ Tệp vượt quá 5 MB', my:'❌ ဖိုင်သည် 5 MB ထက် ကြီးသည်' },
@@ -105,21 +90,6 @@ const I18N = {
   ovUploadingSlip:       { lo:'ກຳລັງອັບໂຫຼດສະລິບ…', th:'กำลังอัพโหลดสลิป…', en:'Uploading slip…', vi:'Đang tải phiếu lên…', my:'ပြေစာ တင်နေသည်…' },
   ovSavingEntry:         { lo:'ກຳລັງບັນທຶກລາຍການ…', th:'กำลังบันทึกรายการ…', en:'Saving entry…', vi:'Đang lưu giao dịch…', my:'မှတ်တမ်း သိမ်းနေသည်…' },
   toastSaveSuccess:      { lo:'✅ ບັນທຶກລາຍການສຳເລັດ!', th:'✅ บันทึกรายการสำเร็จ!', en:'✅ Entry saved successfully!', vi:'✅ Đã lưu giao dịch thành công!', my:'✅ မှတ်တမ်း အောင်မြင်စွာ သိမ်းပြီးပါပြီ!' },
-  notifyIncomeTitle:     { lo:'🟢 ບັນທຶກລາຍຮັບສຳເລັດ / Income Saved', th:'🟢 บันทึกรายรับสำเร็จ / Income Saved', en:'🟢 Income Saved', vi:'🟢 Đã lưu khoản thu / Income Saved', my:'🟢 ဝင်ငွေ သိမ်းပြီးပါပြီ / Income Saved' },
-  notifyExpenseTitle:    { lo:'🔴 ບັນທຶກລາຍຈ່າຍສຳເລັດ / Expense Saved', th:'🔴 บันทึกรายจ่ายสำเร็จ / Expense Saved', en:'🔴 Expense Saved', vi:'🔴 Đã lưu khoản chi / Expense Saved', my:'🔴 အသုံးစရိတ် သိမ်းပြီးပါပြီ / Expense Saved' },
-  btnTestNotification:   { lo:'🔔 ທົດສອບແຈ້ງເຕືອນ / Test Notification', th:'🔔 ทดสอบแจ้งเตือน / Test Notification', en:'🔔 Test Notification', vi:'🔔 Kiểm tra thông báo / Test Notification', my:'🔔 အသိပေးချက် စစ်ဆေးမည် / Test Notification' },
-  btnOpenConsole:        { lo:'🛠 ເປີດ Developer Console', th:'🛠 เปิด Developer Console', en:'🛠 Open Developer Console', vi:'🛠 Mở Developer Console', my:'🛠 Developer Console ဖွင့်မည်' },
-  notifNotSupported:     { lo:'⚠️ ບຣາວເຊີນີ້ບໍ່ຮອງຮັບການແຈ້ງເຕືອນ', th:'⚠️ เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน', en:'⚠️ This browser does not support notifications', vi:'⚠️ Trình duyệt này không hỗ trợ thông báo', my:'⚠️ ဤဘရောက်ဆာသည် အသိပေးချက်များကို မထောက်ပံ့ပါ' },
-  notifTestTitle:        { lo:'🔔 ນີ້ແມ່ນການແຈ້ງເຕືອນທົດສອບ', th:'🔔 นี่คือการแจ้งเตือนทดสอบ', en:'🔔 This is a Test Notification', vi:'🔔 Đây là thông báo thử nghiệm', my:'🔔 ဤသည် စစ်ဆေးရန် အသိပေးချက်ဖြစ်သည်' },
-  notifTestBody:         { lo:'ຖ້າທ່ານເຫັນອັນນີ້ ການແຈ້ງເຕືອນເຮັດວຽກປົກກະຕິ ✅', th:'ถ้าคุณเห็นข้อความนี้ แสดงว่าการแจ้งเตือนทำงานปกติ ✅', en:'If you can see this, notifications are working correctly ✅', vi:'Nếu bạn thấy được điều này, thông báo đang hoạt động bình thường ✅', my:'ဤစာကို မြင်ရပါက အသိပေးချက်များ ပုံမှန်အလုပ်လုပ်နေပါသည် ✅' },
-  notifTestFailed:       { lo:'❌ ສົ່ງການແຈ້ງເຕືອນທົດສອບບໍ່ສຳເລັດ — ກວດສອບ console', th:'❌ ส่งการแจ้งเตือนทดสอบไม่สำเร็จ — ตรวจสอบ console', en:'❌ Failed to send test notification — check the console', vi:'❌ Gửi thông báo thử nghiệm thất bại — kiểm tra console', my:'❌ စစ်ဆေးအသိပေးချက် ပို့ခြင်း မအောင်မြင်ပါ — console ကို စစ်ဆေးပါ' },
-  notifDeniedHelp:       {
-    lo:  '🔒 ການແຈ້ງເຕືອນຖືກບລັອກໄວ້ສຳລັບເວັບໄຊນີ້\n\nວິທີແກ້ໄຂໃນ Chrome (Mac):\n1. ກົດໄອຄອນ 🔒 ຫຼື ⓘ ທາງຊ້າຍຂອງທີ່ຢູ່ເວັບ\n2. ຊອກຫາ "Notifications" ແລ້ວປ່ຽນເປັນ "Allow"\n3. ໂຫຼດໜ້ານີ້ໃໝ່ (Reload) ແລ້ວກົດທົດສອບອີກຄັ້ງ\n\nຫຼືໄປທີ່ Chrome ▸ Settings ▸ Privacy and security ▸ Site settings ▸ Notifications ແລ້ວລຶບເວັບໄຊນີ້ອອກຈາກລາຍການ "Not allowed to send notifications"\n\nສຳລັບ macOS: ກວດສອບ System Settings ▸ Notifications ▸ Google Chrome ວ່າເປີດໃຊ້ງານຢູ່ນຳ',
-    th:  '🔒 การแจ้งเตือนถูกบล็อกไว้สำหรับเว็บไซต์นี้\n\nวิธีแก้ไขใน Chrome (Mac):\n1. คลิกไอคอน 🔒 หรือ ⓘ ทางซ้ายของแถบที่อยู่เว็บ\n2. มองหา "Notifications" แล้วเปลี่ยนเป็น "Allow"\n3. โหลดหน้านี้ใหม่ (Reload) แล้วกดทดสอบอีกครั้ง\n\nหรือไปที่ Chrome ▸ Settings ▸ Privacy and security ▸ Site settings ▸ Notifications แล้วลบเว็บไซต์นี้ออกจากรายการ "Not allowed to send notifications"\n\nสำหรับ macOS: ตรวจสอบ System Settings ▸ Notifications ▸ Google Chrome ว่าเปิดใช้งานอยู่ด้วย',
-    en:  '🔒 Notifications are blocked for this site\n\nHow to fix it in Chrome (Mac):\n1. Click the 🔒 or ⓘ icon to the left of the address bar\n2. Find "Notifications" and change it to "Allow"\n3. Reload this page and click Test again\n\nOr go to Chrome ▸ Settings ▸ Privacy and security ▸ Site settings ▸ Notifications, and remove this site from the "Not allowed to send notifications" list\n\nOn macOS, also check System Settings ▸ Notifications ▸ Google Chrome to make sure notifications are enabled there too',
-    vi:  '🔒 Thông báo đã bị chặn cho trang web này\n\nCách khắc phục trong Chrome (Mac):\n1. Nhấp vào biểu tượng 🔒 hoặc ⓘ bên trái thanh địa chỉ\n2. Tìm "Notifications" và đổi thành "Allow"\n3. Tải lại trang này và nhấn Test lại\n\nHoặc vào Chrome ▸ Settings ▸ Privacy and security ▸ Site settings ▸ Notifications, và xóa trang web này khỏi danh sách "Not allowed to send notifications"\n\nTrên macOS, cũng kiểm tra System Settings ▸ Notifications ▸ Google Chrome để đảm bảo thông báo được bật ở đó',
-    my:  '🔒 ဤဝဘ်ဆိုဒ်အတွက် အသိပေးချက်များကို ပိတ်ထားသည်\n\nChrome (Mac) တွင် ပြင်ဆင်ရန်-\n1. လိပ်စာဘားရဲ့ ဘယ်ဘက်ရှိ 🔒 သို့မဟုတ် ⓘ အိုင်ကွန်ကို နှိပ်ပါ\n2. "Notifications" ကို ရှာပြီး "Allow" သို့ ပြောင်းပါ\n3. ဤစာမျက်နှာကို ပြန်ဖွင့်ပြီး Test ကို ထပ်နှိပ်ပါ\n\nသို့မဟုတ် Chrome ▸ Settings ▸ Privacy and security ▸ Site settings ▸ Notifications သွားပြီး "Not allowed to send notifications" စာရင်းမှ ဤဝဘ်ဆိုဒ်ကို ဖယ်ရှားပါ\n\nmacOS တွင် System Settings ▸ Notifications ▸ Google Chrome ကိုလည်း စစ်ဆေးပြီး အသိပေးချက်များ ဖွင့်ထားကြောင်း သေချာပါ'
-  },
   errUploadFailed:       { lo:'ອັບໂຫຼດສະລິບລົ້ມເຫຼວ', th:'อัพโหลดสลิปล้มเหลว', en:'Slip upload failed', vi:'Tải phiếu lên thất bại', my:'ပြေစာ တင်ခြင်း မအောင်မြင်ပါ' },
   errSaveFailed:         { lo:'ບັນທຶກລົ້ມເຫຼວ', th:'บันทึกล้มเหลว', en:'Save failed', vi:'Lưu thất bại', my:'သိမ်းခြင်း မအောင်မြင်ပါ' },
   ovLoadingData:         { lo:'ກຳລັງໂຫຼດຂໍ້ມູນ {date}…', th:'กำลังโหลดข้อมูล {date}…', en:'Loading data for {date}…', vi:'Đang tải dữ liệu cho {date}…', my:'{date} အတွက် ဒေတာ ဖွင့်နေသည်…' },

@@ -19,7 +19,6 @@ function doGet(e) {
   try {
     const action = e.parameter.action;
     switch (action) {
-      case 'getUsers':     return respond(getUsers());
       case 'getTodayData': return respond(getDateData(e.parameter.date || todayTab()));
       case 'getDateData':  return respond(getDateData(e.parameter.date));
       default:             return respond({ error: `Unknown GET action: ${action}` });
@@ -33,8 +32,6 @@ function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
     switch (data.action) {
-      case 'validateUser': return respond(validateUser(data.staffName, data.pin));
-      case 'lockUser':     return respond(lockUser(data.staffName));
       case 'submitEntry':  return respond(submitEntry(data));
       case 'uploadFile':   return respond(uploadFile(data.fileName, data.fileData, data.mimeType));
       default:             return respond({ error: `Unknown POST action: ${data.action}` });
@@ -57,51 +54,6 @@ function todayTab() {
   return Utilities.formatDate(new Date(), ss().getSpreadsheetTimeZone(), 'dd-MM-yyyy');
 }
 
-// 👤 User Lookup & Authentication
-function getUsers() {
-  const sheet = ss().getSheetByName('Users');
-  if (!sheet) return { error: "'Users' tab not found in spreadsheet" };
-
-  const rows  = sheet.getDataRange().getValues();
-  const users = [];
-  for (let i = 1; i < rows.length; i++) {
-    const name = String(rows[i][0] || '').trim();
-    if (!name) continue;
-    users.push({ staffName: name, status: String(rows[i][2] || 'Active').trim() });
-  }
-  return { users };
-}
-
-function validateUser(staffName, pin) {
-  const sheet = ss().getSheetByName('Users');
-  if (!sheet) return { success: false, error: 'Users sheet missing' };
-
-  const name = String(staffName || '').trim();
-  const rows = sheet.getDataRange().getValues();
-  for (let i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]).trim() !== name) continue;
-    if (String(rows[i][2]).trim() === 'Locked') return { success: false, locked: true };
-    if (String(rows[i][1]).trim() === String(pin || '').trim()) return { success: true };
-    return { success: false, locked: false };
-  }
-  return { success: false, locked: false };
-}
-
-function lockUser(staffName) {
-  const sheet = ss().getSheetByName('Users');
-  if (!sheet) return { success: false, error: 'Users sheet missing' };
-
-  const name = String(staffName || '').trim();
-  const rows = sheet.getDataRange().getValues();
-  for (let i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]).trim() === name) {
-      sheet.getRange(i + 1, 3).setValue('Locked');
-      return { success: true };
-    }
-  }
-  return { success: false, error: 'User not found' };
-}
-
 // 📝 Entry Submission & Sheet Setup
 function submitEntry(data) {
   const tab   = data.sheetTabName;
@@ -122,7 +74,7 @@ function submitEntry(data) {
   sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length).setValues([row]);
 
   try {
-    const message = '🔔 มีรายการใหม่เข้ามา!\n👤 ผู้บันทึก: ' + data.staffName + ' (' + (data.userEmail || '-') + ')' +
+    const message = '🔔 มีรายการใหม่เข้ามา!\n👤 ผู้บันทึก: ' + data.staffName + ' (' + data.userEmail + ')' +
       '\n💸 รายการ: ' + data.itemName + ' [' + data.shop + ']' +
       '\n💰 ยอดเงิน: ' + data.price + ' ' + data.currency;
     sendTelegramNotification(message);
