@@ -1,5 +1,5 @@
 const CACHE = 'fintrack-v4';
-const ASSETS = ['./', './index.html'];
+const ASSETS = ['./', './index.html', './lang.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
