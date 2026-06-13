@@ -14,7 +14,7 @@ const ENTRY_HEADERS = ['Timestamp', 'Staff Name', 'Item Name', 'Currency',
 
 function ss() { return SpreadsheetApp.openById(SPREADSHEET_ID); }
 
-// 🌐 GET / POST Router
+// 🌐 GET Router
 function doGet(e) {
   try {
     const action = e.parameter.action;
@@ -28,13 +28,13 @@ function doGet(e) {
   }
 }
 
+// 📬 POST Router — single combined payload (upload + row + Telegram)
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
     switch (data.action) {
-      case 'submitEntry':  return respond(submitEntry(data));
-      case 'uploadFile':   return respond(uploadFile(data.fileName, data.fileData, data.mimeType));
-      default:             return respond({ error: `Unknown POST action: ${data.action}` });
+      case 'submitEntry': return respond(submitEntry(data));
+      default:            return respond({ error: `Unknown POST action: ${data.action}` });
     }
   } catch (err) {
     return respond({ error: err.message });
@@ -54,8 +54,15 @@ function todayTab() {
   return Utilities.formatDate(new Date(), ss().getSpreadsheetTimeZone(), 'dd-MM-yyyy');
 }
 
-// 📝 Entry Submission & Sheet Setup
+// 📝 Entry Submission — upload slip, append row, notify Telegram
 function submitEntry(data) {
+  // Step 1: upload slip image to Drive (if provided)
+  let fileUrl = '';
+  if (data.fileData) {
+    fileUrl = uploadSlipToDrive(data.fileName, data.fileData, data.mimeType);
+  }
+
+  // Step 2: append the row to the spreadsheet
   const tab   = data.sheetTabName;
   const sheet = ss().getSheetByName(tab) || createDailySheet(tab);
 
@@ -68,19 +75,17 @@ function submitEntry(data) {
     data.type,
     data.shop,
     data.paymentMethod,
-    data.slipUrl || '',
+    fileUrl,
   ];
 
   sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length).setValues([row]);
 
+  // Step 3: fire the Telegram notification from the server side
   try {
-    const message = '🔔 มีรายการใหม่เข้ามา!\n👤 ผู้บันทึก: ' + data.staffName + ' (' + data.userEmail + ')' +
-      '\n💸 รายการ: ' + data.itemName + ' [' + data.shop + ']' +
-      '\n💰 ยอดเงิน: ' + data.price + ' ' + data.currency;
-    sendTelegramNotification(message);
+    sendTelegramNotification(data, fileUrl);
   } catch (err) {}
 
-  return { success: true };
+  return { success: true, url: fileUrl };
 }
 
 function createDailySheet(tab) {
@@ -131,26 +136,37 @@ function normalizeTimestamp(value, timeZone) {
 }
 
 // 📤 Slip Upload to Drive
-function uploadFile(fileName, fileDataBase64, mimeType) {
-  try {
-    const folder  = DriveApp.getFolderById(DRIVE_FOLDER_ID);
-    const decoded = Utilities.base64Decode(fileDataBase64);
-    const blob    = Utilities.newBlob(decoded, mimeType || 'image/jpeg', fileName);
-    const file    = folder.createFile(blob);
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    return { success: true, url: `https://drive.google.com/file/d/${file.getId()}/view` };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
+function uploadSlipToDrive(fileName, fileDataBase64, mimeType) {
+  const folder  = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+  const decoded = Utilities.base64Decode(fileDataBase64);
+  const blob    = Utilities.newBlob(decoded, mimeType || 'image/jpeg', fileName || 'slip.jpg');
+  const file    = folder.createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return `https://drive.google.com/file/d/${file.getId()}/view`;
 }
 
-// 📲 Telegram Bot Notification Delivery
-function sendTelegramNotification(message) {
+// 📲 Telegram Bot Notification — fired server-side only, never from the client
+function sendTelegramNotification(data, fileUrl) {
+  const lines = [
+    '🔔 *New Transaction Recorded*',
+    `*Type:* ${data.type}`,
+    `*Item Name:* ${data.itemName}`,
+    `*Cost:* ${data.price} ${data.currency}`,
+    `*Payment Method:* ${data.paymentMethod}`,
+    `*Branch:* ${data.shop}`,
+    `*Author:* ${data.userEmail || data.staffName}`,
+  ];
+  if (fileUrl) lines.push(`*Slip:* [View Attachment](${fileUrl})`);
+
   const url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
   const options = {
     method:             'post',
     contentType:        'application/json',
-    payload:            JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message }),
+    payload:            JSON.stringify({
+      chat_id:    TELEGRAM_CHAT_ID,
+      text:       lines.join('\n'),
+      parse_mode: 'Markdown',
+    }),
     muteHttpExceptions: true,
   };
 
