@@ -80,6 +80,13 @@ const I18N = {
 
   navRecord:             { lo:'ບັນທຶກ', th:'บันทึก', en:'Record', vi:'Ghi', my:'မှတ်တမ်း' },
   navSummary:            { lo:'ສະຫຼຸບ', th:'สรุป', en:'Summary', vi:'Tổng kết', my:'အကျဉ်းချုပ်' },
+  navSettings:           { lo:'ຕັ້ງຄ່າ', th:'ตั้งค่า', en:'Settings', vi:'Cài đặt', my:'ဆက်တင်' },
+
+  settingsTitle:         { lo:'ການຕັ້ງຄ່າ', th:'ตั้งค่า', en:'Settings', vi:'Cài đặt', my:'ဆက်တင်' },
+  sectionTheme:          { lo:'🎨 ປັບແຕ່ງ / Customization', th:'🎨 ปรับแต่ง / Customization', en:'🎨 Customization', vi:'🎨 Tùy chỉnh / Customization', my:'🎨 ပြင်ဆင်ချိန်ညှိမှု / Customization' },
+  themeLight:            { lo:'ໂໝດສະຫວ່າງ', th:'โหมดสว่าง', en:'Light Mode', vi:'Chế độ sáng', my:'အလင်းမုဒ်' },
+  themeDark:             { lo:'ໂໝດມືດ', th:'โหมดมืด', en:'Dark Mode', vi:'Chế độ tối', my:'အမှောင်မုဒ်' },
+  ariaToggleTheme:       { lo:'ສະລັບໂໝດສີ', th:'สลับธีม', en:'Toggle theme', vi:'Chuyển chủ đề', my:'အပြင်အဆင် ပြောင်းရန်' },
 
   errConnectSheets:      { lo:'❌ ເຊື່ອມຕໍ່ Google Sheets ບໍ່ໄດ້', th:'❌ เชื่อมต่อ Google Sheets ไม่ได้', en:'❌ Could not connect to Google Sheets', vi:'❌ Không thể kết nối với Google Sheets', my:'❌ Google Sheets သို့ ချိတ်ဆက်၍ မရပါ' },
   errAccountLocked:      { lo:'🔒 ບັນຊີຖືກລັອກຊົ່ວຄາວ ກະລຸນາຕິດຕໍ່ແອັດມິນ', th:'🔒 บัญชีถูกล็อกชั่วคราว กรุณาติดต่อแอดมิน', en:'🔒 Account temporarily locked. Please contact admin', vi:'🔒 Tài khoản tạm thời bị khóa. Vui lòng liên hệ quản trị viên', my:'🔒 အကောင့်ကို ယာယီပိတ်ထားသည်။ admin ကို ဆက်သွယ်ပါ' },

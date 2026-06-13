@@ -28,6 +28,8 @@ This README is provided in two languages. Pick the section for your preferred la
 - **📎 Smart receipt uploads** — drag-and-drop slip photos, auto-compressed before upload to Google Drive
 - **📊 Live dashboard** — daily totals, metric cards, and filterable entry lists
 - **📲 Instant Telegram notifications** — every new transaction, from any device, sends a formatted message straight to your Telegram chat via the Telegram Bot API
+- **⚙️ Standalone Settings page** — a dedicated bottom-nav tab for language, theme, connection, and branch management, replacing the old 3-dot menu
+- **🌗 Light / Dark mode** — instant theme switching via CSS variables, persisted to `localStorage`, no page reload required
 - **⚙️ In-app Settings panel** — Apps Script Web App URL is entered directly in the UI and stored in `localStorage` — no source code editing required
 - **🔊 Sound & vibration fallback** — audible chime on desktop; vibration on mobile when autoplay is blocked
 - **📱 Installable PWA** — full home-screen install on iOS and Android via `manifest.json`
@@ -289,6 +291,8 @@ This project is licensed under the [MIT License](LICENSE).
 - **📎 แนบสลิปอัจฉริยะ** — ลากวางรูปสลิป ระบบบีบอัดอัตโนมัติก่อนอัปโหลดไป Google Drive
 - **📊 แดชบอร์ดแบบเรียลไทม์** — ยอดรวมรายวัน การ์ดสรุปข้อมูล และรายการที่กรองได้
 - **📲 แจ้งเตือนผ่าน Telegram ทันที** — เมื่อมีการบันทึกรายการจากอุปกรณ์ใด ระบบจะส่งข้อความที่จัดรูปแบบแล้วไปยังแชท Telegram ของคุณผ่าน Telegram Bot API
+- **⚙️ หน้าตั้งค่าแบบแยกหน้า** — แท็บใหม่บน Bottom Nav รวมภาษา ธีม การเชื่อมต่อ และการจัดการสาขา แทนที่เมนู 3 จุดแบบเดิม
+- **🌗 โหมดสว่าง / มืด** — สลับธีมได้ทันทีด้วย CSS Variables บันทึกใน `localStorage` ไม่ต้องโหลดหน้าใหม่
 - **⚙️ แผงตั้งค่าในแอป** — กรอก Apps Script Web App URL ได้จากหน้าแอปโดยตรง บันทึกใน `localStorage` ไม่ต้องแก้ไขซอร์สโค้ด
 - **🔊 เสียงและการสั่นสำรอง** — มีเสียงเตือนบนเดสก์ท็อป และสั่นบนมือถือเมื่อเล่นเสียงอัตโนมัติถูกบล็อก
 - **📱 ติดตั้งเป็น PWA ได้** — ติดตั้งบนหน้าจอหลักของ iOS และ Android ผ่าน `manifest.json`
