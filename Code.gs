@@ -81,11 +81,21 @@ function submitEntry(data) {
   sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length).setValues([row]);
 
   // Step 3: fire the Telegram notification from the server side
+  let telegramOk = false;
+  let telegramError = '';
   try {
-    sendTelegramNotification(data, fileUrl);
-  } catch (err) {}
+    const tgResp = sendTelegramNotification(data, fileUrl);
+    const tgCode = tgResp.getResponseCode();
+    if (tgCode === 200) {
+      telegramOk = true;
+    } else {
+      telegramError = `HTTP ${tgCode}: ${tgResp.getContentText()}`;
+    }
+  } catch (err) {
+    telegramError = err.message;
+  }
 
-  return { success: true, url: fileUrl };
+  return { success: true, url: fileUrl, telegramOk, telegramError };
 }
 
 function createDailySheet(tab) {
@@ -145,18 +155,26 @@ function uploadSlipToDrive(fileName, fileDataBase64, mimeType) {
   return `https://drive.google.com/file/d/${file.getId()}/view`;
 }
 
+// 🔒 Escape user-supplied text for Telegram HTML parse_mode
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 // 📲 Telegram Bot Notification — fired server-side only, never from the client
 function sendTelegramNotification(data, fileUrl) {
   const lines = [
-    '🔔 *New Transaction Recorded*',
-    `*Type:* ${data.type}`,
-    `*Item Name:* ${data.itemName}`,
-    `*Cost:* ${data.price} ${data.currency}`,
-    `*Payment Method:* ${data.paymentMethod}`,
-    `*Branch:* ${data.shop}`,
-    `*Author:* ${data.userEmail || data.staffName}`,
+    '🔔 <b>New Transaction Recorded</b>',
+    `<b>Type:</b> ${escapeHtml(data.type)}`,
+    `<b>Item Name:</b> ${escapeHtml(data.itemName)}`,
+    `<b>Cost:</b> ${escapeHtml(data.price)} ${escapeHtml(data.currency)}`,
+    `<b>Payment Method:</b> ${escapeHtml(data.paymentMethod)}`,
+    `<b>Branch:</b> ${escapeHtml(data.shop)}`,
+    `<b>Author:</b> ${escapeHtml(data.userEmail || data.staffName)}`,
   ];
-  if (fileUrl) lines.push(`*Slip:* [View Attachment](${fileUrl})`);
+  if (fileUrl) lines.push(`<b>Slip:</b> <a href="${escapeHtml(fileUrl)}">View Attachment</a>`);
 
   const url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
   const options = {
@@ -165,10 +183,10 @@ function sendTelegramNotification(data, fileUrl) {
     payload:            JSON.stringify({
       chat_id:    TELEGRAM_CHAT_ID,
       text:       lines.join('\n'),
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
     }),
     muteHttpExceptions: true,
   };
 
-  UrlFetchApp.fetch(url, options);
+  return UrlFetchApp.fetch(url, options);
 }

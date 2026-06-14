@@ -10,6 +10,8 @@ const LANGS = {
 const I18N = {
   tagline:               { lo:'ລະບົບບັນຊີລາຍຮັບ-ລາຍຈ່າຍ', th:'ระบบบัญชีรายรับ-รายจ่าย', en:'Income & Expense Tracking System', vi:'Hệ thống Quản lý Thu Chi', my:'ဝင်ငွေနှင့် အသုံးစရိတ် မှတ်တမ်းစနစ်' },
   googleSignInHint:      { lo:'ເຂົ້າສູ່ລະບົບດ້ວຍ Google ເພື່ອເລີ່ມໃຊ້ງານ', th:'เข้าสู่ระบบด้วย Google เพื่อเริ่มใช้งาน', en:'Sign in with Google to get started', vi:'Đăng nhập bằng Google để bắt đầu', my:'စတင်အသုံးပြုရန် Google ဖြင့် လော့ဂ်အင်ဝင်ပါ' },
+  googleSignInNotConfigured: { lo:'⚠️ ຍັງບໍ່ໄດ້ຕັ້ງຄ່າ Google Sign-In', th:'⚠️ ยังไม่ได้ตั้งค่า Google Sign-In', en:'⚠️ Google Sign-In is not configured', vi:'⚠️ Google Sign-In chưa được cấu hình', my:'⚠️ Google Sign-In ကို သတ်မှတ်မထားပါ' },
+  googleSignInError:     { lo:'⚠️ ໂຫຼດ Google Sign-In ບໍ່ສຳເລັດ — ກະລຸນາໂຫຼດໃໝ່', th:'⚠️ โหลด Google Sign-In ไม่สำเร็จ — กรุณาโหลดใหม่', en:'⚠️ Failed to load Google Sign-In — please reload', vi:'⚠️ Không thể tải Google Sign-In — vui lòng tải lại trang', my:'⚠️ Google Sign-In ဖွင့်၍မရပါ — ပြန်လည်ဖွင့်ပါ' },
   loadingGeneric:        { lo:'ກຳລັງດຳເນີນການ...', th:'กำลังดำเนินการ...', en:'Processing...', vi:'Đang xử lý...', my:'လုပ်ဆောင်နေသည်...' },
 
   footerCopy:            { lo:'© 2026 FelisiaCH — ເຜີຍແຜ່ພາຍໃຕ້ໃບອະນຸຍາດ MIT', th:'© 2026 FelisiaCH — เผยแพร่ภายใต้สัญญาอนุญาต MIT', en:'© 2026 FelisiaCH — Released under the MIT License', vi:'© 2026 FelisiaCH — Phát hành theo Giấy phép MIT', my:'© 2026 FelisiaCH — MIT လိုင်စင်အောက်တွင် ထုတ်ပြန်ထားသည်' },

@@ -649,6 +649,7 @@ option{background:#0E1526}
       <div class="g-signin-row">
         <div id="g-signin-btn"></div>
         <div class="g-signin-hint" id="g-signin-hint" data-i18n="googleSignInHint">เข้าสู่ระบบด้วย Google เพื่อเริ่มใช้งาน</div>
+        <div class="g-signin-hint hidden" id="g-signin-warn"></div>
       </div>
     </div>
   </div>
@@ -1251,12 +1252,29 @@ function handleGoogleCredential(resp) {
   enterApp(A.me);
 }
 
-function initGoogleSignIn() {
-  if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') return;
-  if (!window.google?.accounts?.id) { setTimeout(initGoogleSignIn, 300); return; }
+function showSignInWarn(key) {
+  const el = $('g-signin-warn');
+  el.textContent = t(key);
+  el.classList.remove('hidden');
+}
 
-  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
-  google.accounts.id.renderButton($('g-signin-btn'), { theme: 'outline', size: 'medium', shape: 'pill' });
+function initGoogleSignIn(retries = 20) {
+  if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
+    showSignInWarn('googleSignInNotConfigured');
+    return;
+  }
+  if (!window.google?.accounts?.id) {
+    if (retries <= 0) { showSignInWarn('googleSignInError'); return; }
+    setTimeout(() => initGoogleSignIn(retries - 1), 300);
+    return;
+  }
+
+  try {
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+    google.accounts.id.renderButton($('g-signin-btn'), { theme: 'outline', size: 'medium', shape: 'pill' });
+  } catch (err) {
+    showSignInWarn('googleSignInError');
+  }
 }
 
 // 🚀 App Init & Bootstrap
