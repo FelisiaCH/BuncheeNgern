@@ -178,8 +178,7 @@ function sendTelegramNotification(data, fileUrl, amounts) {
     .join('\n');
 
   const lines = [
-    '🔔 <b>New Transaction Recorded</b>',
-    `<b>Type:</b> ${escapeHtml(data.type)}`,
+    data.type === 'Income' ? '🟢 <b>New Income</b>' : '🔴 <b>New Expense</b>',
     `<b>Item Name:</b> ${escapeHtml(data.itemName)}`,
     `<b>Cost:</b>\n${costLines}`,
     `<b>Payment Method:</b> ${escapeHtml(data.paymentMethod)}`,
