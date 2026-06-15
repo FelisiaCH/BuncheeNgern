@@ -81,6 +81,7 @@ const I18N = {
   ovUploadingSlip:       { lo:'ກຳລັງອັບໂຫຼດສະລິບ…', th:'กำลังอัพโหลดสลิป…', en:'Uploading slip…', vi:'Đang tải phiếu lên…', my:'ပြေစာ တင်နေသည်…' },
   ovSavingEntry:         { lo:'ກຳລັງບັນທຶກລາຍການ…', th:'กำลังบันทึกรายการ…', en:'Saving entry…', vi:'Đang lưu giao dịch…', my:'မှတ်တမ်း သိမ်းနေသည်…' },
   toastSaveSuccess:      { lo:'✅ ບັນທຶກລາຍການສຳເລັດ!', th:'✅ บันทึกรายการสำเร็จ!', en:'✅ Entry saved successfully!', vi:'✅ Đã lưu giao dịch thành công!', my:'✅ မှတ်တမ်း အောင်မြင်စွာ သိမ်းပြီးပါပြီ!' },
+  toastTelegramFailed:   { lo:'⚠️ ບັນທຶກແລ້ວ ແຕ່ການແຈ້ງເຕືອນ Telegram ລົ້ມເຫຼວ: {msg}', th:'⚠️ บันทึกแล้ว แต่การแจ้งเตือน Telegram ล้มเหลว: {msg}', en:'⚠️ Saved, but Telegram notification failed: {msg}', vi:'⚠️ Đã lưu, nhưng thông báo Telegram thất bại: {msg}', my:'⚠️ သိမ်းပြီးပါပြီ၊ သို့သော် Telegram အကြောင်းကြားချက် မအောင်မြင်ပါ- {msg}' },
   errUploadFailed:       { lo:'ອັບໂຫຼດສະລິບລົ້ມເຫຼວ', th:'อัพโหลดสลิปล้มเหลว', en:'Slip upload failed', vi:'Tải phiếu lên thất bại', my:'ပြေစာ တင်ခြင်း မအောင်မြင်ပါ' },
   errSaveFailed:         { lo:'ບັນທຶກລົ້ມເຫຼວ', th:'บันทึกล้มเหลว', en:'Save failed', vi:'Lưu thất bại', my:'သိမ်းခြင်း မအောင်မြင်ပါ' },
   ovLoadingData:         { lo:'ກຳລັງໂຫຼດຂໍ້ມູນ {date}…', th:'กำลังโหลดข้อมูล {date}…', en:'Loading data for {date}…', vi:'Đang tải dữ liệu cho {date}…', my:'{date} အတွက် ဒေတာ ဖွင့်နေသည်…' },

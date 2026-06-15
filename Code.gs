@@ -62,10 +62,8 @@ function submitEntry(data) {
     fileUrl = uploadSlipToDrive(data.fileName, data.fileData, data.mimeType);
   }
 
-  // Step 2: append the row to the spreadsheet
-  const tab   = data.sheetTabName;
-  const sheet = ss().getSheetByName(tab) || createDailySheet(tab);
-
+  // Step 2: append the row to the spreadsheet (locked to avoid concurrent-write races)
+  const tab = data.sheetTabName;
   const row = [
     data.timestamp,
     data.staffName,
@@ -78,7 +76,14 @@ function submitEntry(data) {
     fileUrl,
   ];
 
-  sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length).setValues([row]);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const sheet = ss().getSheetByName(tab) || createDailySheet(tab);
+    sheet.appendRow(row);
+  } finally {
+    lock.releaseLock();
+  }
 
   // Step 3: fire the Telegram notification from the server side
   let telegramOk = false;

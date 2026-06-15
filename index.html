@@ -1226,6 +1226,14 @@ function apiGet(params) {
   Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
   return _apiFetch(url, { redirect:'follow' });
 }
+function apiPost(bodyObj) {
+  return _apiFetch(SCRIPT_URL, {
+    method:  'POST',
+    redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+    body:    JSON.stringify(bodyObj),
+  });
+}
 
 // 💾 Session Storage
 const SESSION_KEY = 'userSession';
@@ -1417,31 +1425,36 @@ async function doSubmit() {
     showOv(A.fd.pay === 'QR' && A.slip ? t('ovUploadingSlip') : t('ovSavingEntry'));
     const ts  = nowStamp();
     const tab = fmtDateTab(new Date());
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode:   'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-      body: JSON.stringify({
-        action:        'submitEntry',
-        timestamp:     ts,
-        sheetTabName:  tab,
-        staffName:     A.me,
-        userEmail:     A.userEmail || '',
-        itemName:      item,
-        currency:      cur,
-        price:         Number(price) || 0,
-        type:          A.fd.type === 'income' ? 'Income' : 'Expense',
-        shop:          A.fd.shop,
-        paymentMethod: A.fd.pay === 'QR' ? 'Lao QR / OnePay' : 'Cash',
-        fileName:      A.slip?.name || '',
-        fileData:      A.slip?.b64  || '',
-        mimeType:      A.slip?.mime || '',
-      }),
+    const result = await apiPost({
+      action:        'submitEntry',
+      timestamp:     ts,
+      sheetTabName:  tab,
+      staffName:     A.me,
+      userEmail:     A.userEmail || '',
+      itemName:      item,
+      currency:      cur,
+      price:         Number(price) || 0,
+      type:          A.fd.type === 'income' ? 'Income' : 'Expense',
+      shop:          A.fd.shop,
+      paymentMethod: A.fd.pay === 'QR' ? 'Lao QR / OnePay' : 'Cash',
+      fileName:      A.slip?.name || '',
+      fileData:      A.slip?.b64  || '',
+      mimeType:      A.slip?.mime || '',
     });
 
     hideOv();
-    showToast(t('toastSaveSuccess'));
-    resetForm();
+
+    if (result.status === 'error' || !result.success) {
+      const msg = result.error || result.telegramError || 'Unknown error';
+      setMsg('f-msg', t('errGeneric',{msg:esc(msg)}),'err');
+      showToast(t('errGeneric', { msg }), 'err');
+    } else {
+      showToast(t('toastSaveSuccess'));
+      if (result.telegramOk === false) {
+        showToast(t('toastTelegramFailed', { msg: result.telegramError || 'Unknown error' }), 'warn');
+      }
+      resetForm();
+    }
   } catch(e) {
     hideOv();
     setMsg('f-msg', t('errGeneric',{msg:esc(e.message)}),'err');
