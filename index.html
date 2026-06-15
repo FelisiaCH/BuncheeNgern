@@ -872,8 +872,8 @@ option{background:#0E1526}
 <script src="i18n/languages.js"></script>
 <script>
 // ⚙️ Configuration
-const GOOGLE_CLIENT_ID = "GOOGLE_CLIENT_ID";
-const SCRIPT_URL       = "SCRIPT_URL";
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE";
+const SCRIPT_URL       = "YOUR_APPS_SCRIPT_URL_HERE";
 
 // 🛠️ DOM Helper (must be defined before any early init calls below)
 const $ = id => document.getElementById(id);
@@ -1238,11 +1238,13 @@ function _apiFetch(input, init) {
     });
 }
 function apiGet(params) {
+  if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return Promise.reject(new Error('SCRIPT_URL is not set — see README for setup instructions'));
   const url = new URL(SCRIPT_URL);
   Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
   return _apiFetch(url, { redirect:'follow' });
 }
 function apiPost(bodyObj) {
+  if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return Promise.reject(new Error('SCRIPT_URL is not set — see README for setup instructions'));
   return _apiFetch(SCRIPT_URL, {
     method:  'POST',
     redirect: 'follow',
