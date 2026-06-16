@@ -1,7 +1,5 @@
 # FinTrack
 
-[อ่านคู่มือภาษาไทยที่นี่](README_th.md)
-
 A mobile-first PWA for logging income & expenses across one or more branches. Staff sign in with Google, record a transaction (optionally split across multiple currencies in one go), and the entry is appended to a Google Sheet — slip images go to Drive, and a Telegram message is sent to your management chat(s). The frontend is a single `index.html`; the backend is one Google Apps Script file (`Code.gs`).
 
 ## Features
@@ -112,7 +110,7 @@ If `GOOGLE_CLIENT_ID` is still left as the placeholder, or the Google Identity S
    ```
 
    These are plain constants in the file — there is no in-app settings field for them.
-2. Deploy the **whole project folder**, not just `index.html` — the app loads `i18n/languages.js`, `service-worker.js`, and icon/manifest files from relative paths, and will fail to load or run untranslated if those 404. From the repo root:
+2. Deploy the **whole project folder**, not just `index.html` — the app loads `i18n/lang_*.js`, `service-worker.js`, and icon/manifest files from relative paths, and will fail to load or run untranslated if those 404. From the repo root:
 
    ```bash
    npx wrangler pages deploy .
@@ -123,21 +121,18 @@ If `GOOGLE_CLIENT_ID` is still left as the placeholder, or the Google Identity S
 4. **Bump the service worker cache on every change.** `service-worker.js` defines:
 
    ```js
-   const CACHE = 'fintrack-v1.1.2';
+   const CACHE = 'fintrack-v1.1.4';
    ```
 
-   HTML pages are fetched network-first (so most changes to `index.html` reach users on their next reload automatically), but `i18n/languages.js`, icons, and other static assets are served cache-first. Whenever you change any static asset, bump the `CACHE` string (e.g. `v1.1.3`) so old cached files are evicted and the new ones are fetched.
+   HTML pages are fetched network-first (so most changes to `index.html` reach users on their next reload automatically), but `i18n/lang_*.js`, icons, and other static assets are served cache-first. Whenever you change any static asset, bump the `CACHE` string (e.g. `v1.1.5`) so old cached files are evicted and the new ones are fetched.
 
 ---
 
-## 5. Usage guide
+## 5. First run — add currencies
 
-- **Logging an entry:** on the **Record** tab, choose Income or Expense, enter an item name (you can type a new one or pick from previously used items), enter the amount and currency, choose the branch and payment method.
-- **Multiple currencies in one transaction:** click **"+ Add Currency"** to add extra currency/amount lines (e.g. part paid in LAK, part in THB). Each line is saved as its own row in the sheet, but all rows from one submission share the same Transaction ID so they can be grouped later.
-- **Attaching a slip:** if you select **Lao QR / OnePay** as the payment method, an upload zone appears — tap it or drag-and-drop an image (max 5 MB). The image is automatically resized to a max of 1280px on its longest side and re-encoded as JPEG at ~82% quality in the browser before upload, to keep uploads small.
-- **Switching branch:** pick a branch chip in the Record tab; branches are managed from **Settings ▸ Management** (add/remove).
-- **Switching date / reading the dashboard:** on the **Summary** tab, use the arrows to move between days, filter by branch, and switch currency tabs (LAK/THB/USD) to see cash income, QR/OnePay income, and total expenses for that day, plus a list of recent entries.
-- **Language switch:** in **Settings**, pick from Lao, Thai, English, Vietnamese, or Burmese — the choice is remembered on the device.
+**Currencies are not preset.** The list starts empty. Before you can log any entry, go to **Settings ▸ Manage Currencies** and add at least one currency with a code and symbol (e.g. code `LAK`, symbol `₭`). The app will warn you and block submission if no currencies are configured.
+
+See [docs/USAGE.md](docs/USAGE.md) for the full day-to-day usage guide (logging entries, multi-currency transactions, dashboard, PWA install, etc.).
 
 ---
 
@@ -150,7 +145,7 @@ If `GOOGLE_CLIENT_ID` is still left as the placeholder, or the Google Identity S
 | Entry saves but no Telegram message arrives | Script never authorized for external requests, bot token wrong, or chat ID(s) wrong/never messaged the bot | Run any function once in the Apps Script editor to authorize (§1.6); verify token and chat IDs (§2). The response includes `telegramOk`/`telegramError` so the app can show the exact failure as a toast |
 | Telegram error mentions "chat not found" | The bot was never messaged first (private chat), or isn't in the group, or the ID is missing its `-` prefix | Re-check §2 |
 | Slip upload fails | Script not authorized, or wrong `DRIVE_FOLDER_ID` | Authorize (§1.6); check the folder ID |
-| `i18n/languages.js` 404s, app stuck on splash, or UI shows untranslated keys | Only `index.html` was deployed, not the whole folder | Redeploy the entire project folder (§4.2) |
+| `i18n/lang_*.js` 404s, app stuck on splash, or UI shows untranslated keys | Only `index.html` was deployed, not the whole folder | Redeploy the entire project folder (§4.2) |
 | Code/UI changes don't show up on a phone that already installed the app | Stale service-worker cache for static assets | Bump `CACHE` in `service-worker.js` (§4.4) and reload; HTML itself is network-first so most changes should appear on a normal reload |
 | Apps Script changes don't take effect | Edited `Code.gs` but didn't ship a new deployment version | Deploy ▸ Manage deployments ▸ edit ▸ New version ▸ Deploy (§1) |
 
@@ -171,7 +166,7 @@ If you need sign-in to be real access control rather than a soft gate:
 
 | Layer | Technology |
 | --- | --- |
-| Frontend | Single-file HTML/CSS/JS PWA, 5-language i18n (`i18n/languages.js`), installable via `service-worker.js` |
+| Frontend | Single-file HTML/CSS/JS PWA, 5-language i18n (`i18n/lang_*.js`), installable via `service-worker.js` |
 | Backend | Google Apps Script (`doGet`/`doPost` Web App), scopes declared in `appsscript.json` |
 | Storage | Google Sheets (one tab per day) + Google Drive (slip images) |
 | Notifications | Telegram Bot API, sent server-side to one or more chats, HTML-escaped |
