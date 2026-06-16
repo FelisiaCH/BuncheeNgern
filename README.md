@@ -6,6 +6,8 @@ A mobile-first PWA for logging income & expenses across one or more branches. St
 
 - Multi-branch tracking, with branches manageable from the in-app Settings tab
 - Multi-currency per transaction — add several currency/amount lines to a single entry (e.g. pay partly in LAK, partly in THB); all lines share one Transaction ID
+- User-configurable currencies — add/remove from Settings; the list starts empty; typing a currency code and tabbing out fills the symbol automatically via the browser's `Intl` API (USD→$, THB→฿, LAK→₭, etc.), with manual override if the code is unknown
+- Split payment per line — each currency line can be Cash, Online Payment, or Split (partly Cash + partly Online); a Split line writes two sheet rows sharing the same Transaction ID so the dashboard counts Cash Income and Online Payment Income correctly
 - Telegram notifications to a private chat, a group, or both at once
 - 5 languages: Lao, Thai, English, Vietnamese, Burmese
 - Installable PWA with offline app-shell support
@@ -62,7 +64,7 @@ There are **six** placeholder values to fill in before the app works:
 ### What the backend exposes
 
 - `doGet`: `?action=getTodayData` (today's entries) and `?action=getDateData&date=DD-MM-YYYY` (entries for a specific day's sheet tab)
-- `doPost`: `{ action: 'submitEntry', ... }` — uploads the slip (if any) to Drive, appends one row per currency amount to the day's sheet tab (all sharing one `Transaction ID`), and sends the Telegram notification
+- `doPost`: `{ action: 'submitEntry', ... }` — uploads the slip (if any) to Drive, appends rows to the day's sheet tab (Cash and Online Payment lines write one row each; a Split line writes **two rows** — one `Cash` and one `Online Payment` — all sharing one `Transaction ID`), and sends the Telegram notification
 - Each day's sheet tab is created on first use with header row: `Timestamp, Staff Name, Item Name, Currency, Price, Type, Shop, Payment Method, Slip URL, Transaction ID`
 
 ---
@@ -121,10 +123,10 @@ If `GOOGLE_CLIENT_ID` is still left as the placeholder, or the Google Identity S
 4. **Bump the service worker cache on every change.** `service-worker.js` defines:
 
    ```js
-   const CACHE = 'buncheengern-v1.1.5';
+   const CACHE = 'buncheengern-v1.1.8';
    ```
 
-   HTML pages are fetched network-first (so most changes to `index.html` reach users on their next reload automatically), but `i18n/lang_*.js`, icons, and other static assets are served cache-first. Whenever you change any static asset, bump the `CACHE` string (e.g. `v1.1.5`) so old cached files are evicted and the new ones are fetched.
+   HTML pages are fetched network-first (so most changes to `index.html` reach users on their next reload automatically), but `i18n/lang_*.js`, icons, and other static assets are served cache-first. Whenever you change any static asset, bump the `CACHE` string (e.g. `v1.1.8`) so old cached files are evicted and the new ones are fetched.
 
 ---
 
