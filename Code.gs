@@ -75,7 +75,7 @@ function submitEntry(data) {
     const sheet = ss().getSheetByName(tab) || createDailySheet(tab);
     amounts.forEach(amount => {
       if (amount.paymentMethod === 'Split') {
-        // Split → two rows so dashboard cash/online totals stay accurate
+        // One Split line → two rows so dashboard cash/online totals stay accurate
         sheet.appendRow([data.timestamp, data.staffName, data.itemName,
           amount.currency, Number(amount.splitCash) || 0,
           data.type, data.shop, 'Cash', fileUrl, transactionId]);
