@@ -717,11 +717,7 @@ option{background:#0E1526}
     <div class="fg">
       <label class="fl" data-i18n="labelAmount">จำนวนเงิน</label>
       <div class="pg">
-        <select id="f-cur" class="cur-sel" aria-label="สกุลเงิน" data-i18n-aria="ariaCurrency">
-          <option value="LAK">LAK ₭</option>
-          <option value="THB">THB ฿</option>
-          <option value="USD">USD $</option>
-        </select>
+        <select id="f-cur" class="cur-sel" aria-label="สกุลเงิน" data-i18n-aria="ariaCurrency"></select>
         <input type="number" id="f-price" class="prc-in" placeholder="0" inputmode="decimal" min="0" step="any">
       </div>
       <div id="cur-lines"></div>
@@ -789,11 +785,7 @@ option{background:#0E1526}
 
     <div class="branch-filter" id="branch-filter"></div>
 
-    <div class="cur-tabs">
-      <button class="ctab on" id="ctab-LAK" onclick="switchCurTab('LAK')">LAK ₭</button>
-      <button class="ctab" id="ctab-THB" onclick="switchCurTab('THB')">THB ฿</button>
-      <button class="ctab" id="ctab-USD" onclick="switchCurTab('USD')">USD $</button>
-    </div>
+    <div class="cur-tabs" id="cur-tabs"></div>
 
     <div class="dash-grid">
       <div class="mc g">
@@ -851,6 +843,20 @@ option{background:#0E1526}
         <button type="button" class="menu-action-btn" onclick="addBranch()" data-i18n="btnAddBranch">➕ เพิ่มสาขาใหม่</button>
       </div>
     </div>
+
+    <div class="settings-sec">
+      <div class="settings-lbl" data-i18n="menuManageCurrencies">💱 Manage Currencies</div>
+      <div id="manage-currency-list" class="branch-manage-list"></div>
+      <div class="branch-add-row">
+        <input type="text" id="m-cur-code" class="fi" maxlength="10" autocomplete="off"
+               data-i18n-placeholder="placeholderCurCode"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();addCurrency();}">
+        <input type="text" id="m-cur-symbol" class="fi" maxlength="5" autocomplete="off"
+               data-i18n-placeholder="placeholderCurSymbol"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();addCurrency();}">
+        <button type="button" class="menu-action-btn" onclick="addCurrency()" data-i18n="btnAddNewCurrency">➕ Add Currency</button>
+      </div>
+    </div>
   </div>
 
   <nav class="bot-nav">
@@ -894,7 +900,16 @@ function loadBranches() {
 let BRANCHES    = loadBranches();
 let BRANCH_KEYS = ['All', ...BRANCHES];
 
-const CURRENCIES       = ['LAK', 'THB', 'USD'];
+const CURRENCIES_KEY = 'savedCurrencies';
+function loadCurrencies() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CURRENCIES_KEY) || 'null');
+    if (Array.isArray(saved) && saved.length) return saved.filter(c => c && c.code && c.symbol);
+  } catch {}
+  return [];
+}
+let CURRENCIES = loadCurrencies();
+
 const TOAST_DURATION   = 3200;
 const MAX_FILE_SIZE    = 5 * 1024 * 1024;
 const MAX_IMG_PX       = 1280;
@@ -911,7 +926,7 @@ const A = {
 let dashByBranchCur  = {};
 let dashByCur        = {};
 let dashEntries      = [];
-let activeCurTab     = 'LAK';
+let activeCurTab     = CURRENCIES.length ? CURRENCIES[0].code : '';
 let activeBranchFilter = 'All';
 let BRANCH_FILTER_IDS = {};
 let dashDate    = new Date();
@@ -1182,6 +1197,125 @@ function renderManageBranchesList() {
   });
 }
 
+// 💱 Currency Management
+function commitCurrencies(list) {
+  CURRENCIES = list;
+  localStorage.setItem(CURRENCIES_KEY, JSON.stringify(CURRENCIES));
+  if (!CURRENCIES.length) activeCurTab = '';
+  else if (!CURRENCIES.find(c => c.code === activeCurTab)) activeCurTab = CURRENCIES[0].code;
+  renderCurSelect();
+  renderCurLines();
+  renderManageCurrenciesList();
+  if (!$('scr-app').classList.contains('hidden') && !$('tab-dash').classList.contains('hidden')) {
+    dashByBranchCur = buildTotals(dashEntries);
+    dashByCur       = dashByBranchCur[activeBranchFilter];
+    refreshDashUI();
+  } else {
+    renderCurTabs();
+  }
+}
+
+function addCurrency() {
+  const codeIn   = $('m-cur-code');
+  const symbolIn = $('m-cur-symbol');
+  const code   = (codeIn?.value   || '').trim().toUpperCase();
+  const symbol = (symbolIn?.value || '').trim();
+  if (!code)   { showToast(t('warnEnterCurCode'),   'warn'); return; }
+  if (!symbol) { showToast(t('warnEnterCurSymbol'), 'warn'); return; }
+  if (CURRENCIES.some(c => c.code.toUpperCase() === code)) { showToast(t('warnCurExists'), 'warn'); return; }
+  commitCurrencies([...CURRENCIES, { code, symbol }]);
+  if (codeIn)   codeIn.value   = '';
+  if (symbolIn) symbolIn.value = '';
+  showToast(t('toastCurrencyAdded'));
+}
+
+function removeCurrency(code) {
+  if (!confirm(t('confirmDeleteCurrency', { code }))) return;
+  commitCurrencies(CURRENCIES.filter(c => c.code !== code));
+  showToast(t('toastCurrencyRemoved'));
+}
+
+function renderManageCurrenciesList() {
+  const wrap = $('manage-currency-list');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  if (!CURRENCIES.length) {
+    const hint = document.createElement('div');
+    hint.className = 'branch-empty-hint';
+    hint.textContent = t('noCurrenciesHint');
+    wrap.appendChild(hint);
+    return;
+  }
+  CURRENCIES.forEach(({ code, symbol }) => {
+    const row = document.createElement('div');
+    row.className = 'branch-row';
+    const iconEl = document.createElement('span');
+    iconEl.className = 'branch-row-icon';
+    iconEl.textContent = symbol;
+    const label = document.createElement('span');
+    label.className = 'branch-row-name';
+    label.textContent = code;
+    label.title = `${code} ${symbol}`;
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'branch-del-btn';
+    delBtn.textContent = '❌';
+    delBtn.setAttribute('aria-label', t('ariaDeleteCurrency'));
+    delBtn.addEventListener('click', () => removeCurrency(code));
+    row.append(iconEl, label, delBtn);
+    wrap.appendChild(row);
+  });
+}
+
+function renderCurSelect() {
+  const sel = $('f-cur');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '';
+  if (!CURRENCIES.length) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.disabled = true;
+    opt.selected = true;
+    opt.textContent = t('noCurrenciesOption');
+    sel.appendChild(opt);
+    return;
+  }
+  CURRENCIES.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.code;
+    opt.textContent = `${c.code} ${c.symbol}`;
+    sel.appendChild(opt);
+  });
+  sel.value = CURRENCIES.find(c => c.code === prev) ? prev : CURRENCIES[0].code;
+}
+
+function dashCurCodes() {
+  const codes = CURRENCIES.map(c => c.code);
+  dashEntries.forEach(e => { if (e.currency && !codes.includes(e.currency)) codes.push(e.currency); });
+  return codes;
+}
+
+function renderCurTabs() {
+  const wrap = $('cur-tabs');
+  if (!wrap) return;
+  const codes = dashCurCodes();
+  if (!codes.length) { wrap.innerHTML = ''; return; }
+  if (!codes.includes(activeCurTab)) activeCurTab = codes[0];
+  wrap.innerHTML = '';
+  codes.forEach(code => {
+    const sym = currSym(code);
+    const btn = document.createElement('button');
+    btn.className = 'ctab' + (code === activeCurTab ? ' on' : '');
+    btn.id = 'ctab-' + code;
+    btn.textContent = `${code} ${sym}`;
+    btn.onclick = () => switchCurTab(code);
+    const d = (dashByCur || {})[code] || {cash:0,qr:0,exp:0};
+    if (d.cash > 0 || d.qr > 0 || d.exp > 0) btn.classList.add('has');
+    wrap.appendChild(btn);
+  });
+}
+
 // 🛠️ DOM & Format Helpers
 const p2 = n  => String(n).padStart(2,'0');
 
@@ -1435,7 +1569,7 @@ function renderCurLines() {
     row.innerHTML = `
       <div class="pg">
         <select class="cur-sel" aria-label="${esc(t('ariaCurrency'))}">
-          ${CURRENCIES.map(c => `<option value="${c}"${c === line.currency ? ' selected' : ''}>${c}</option>`).join('')}
+          ${CURRENCIES.map(c => `<option value="${c.code}"${c.code === line.currency ? ' selected' : ''}>${c.code} ${c.symbol}</option>`).join('')}
         </select>
         <input type="number" class="prc-in" placeholder="0" inputmode="decimal" min="0" step="any" value="${line.price ?? ''}">
       </div>
@@ -1450,7 +1584,8 @@ function renderCurLines() {
   });
 }
 function addCurLine() {
-  A.fd.extraCur.push({ currency: 'LAK', price: '' });
+  if (!CURRENCIES.length) { showToast(t('warnNoCurrencies'), 'warn'); return; }
+  A.fd.extraCur.push({ currency: CURRENCIES[0].code, price: '' });
   renderCurLines();
 }
 function removeCurLine(i) {
@@ -1465,6 +1600,7 @@ async function doSubmit() {
   const cur   = $('f-cur').value;
   setMsg('f-msg');
 
+  if (!CURRENCIES.length)  { setMsg('f-msg', t('warnNoCurrencies'),'warn'); return; }
   if (!item)               { setMsg('f-msg', t('warnEnterItemName'),'warn'); return; }
   if (!price || price <= 0){ setMsg('f-msg', t('warnEnterValidAmount'),'warn'); return; }
   if (A.fd.pay === 'QR' && !A.slip) { setMsg('f-msg', t('warnAttachSlip'),'warn'); return; }
@@ -1522,7 +1658,7 @@ async function doSubmit() {
 }
 
 function resetForm() {
-  $('f-item').value = ''; closeCombo(); $('f-price').value = ''; $('f-cur').value = 'LAK';
+  $('f-item').value = ''; closeCombo(); $('f-price').value = ''; $('f-cur').value = CURRENCIES.length ? CURRENCIES[0].code : '';
   A.fd.extraCur = []; renderCurLines();
   clearSlip(); setMsg('f-msg');
   document.querySelectorAll('#sg-type .seg').forEach((s,i) => s.classList.toggle('on', i===0));
@@ -1552,7 +1688,7 @@ function hardResetDash() {
   dashEntries     = [];
   dashByBranchCur = buildTotals([]);
   dashByCur       = dashByBranchCur[activeBranchFilter];
-  CURRENCIES.forEach(c => $(`ctab-${c}`).classList.remove('has'));
+  renderCurTabs();
   renderDashCur(activeCurTab);
   $('d-cnt').textContent = '—';
   $('d-list').innerHTML  = '';
@@ -1629,11 +1765,11 @@ async function loadDash() {
 }
 
 // 💰 Dashboard Totals & Rendering
-function currSym(c) { return c==='THB'?'฿':c==='USD'?'$':'₭'; }
+function currSym(c) { const cur = CURRENCIES.find(x => x.code === c); return cur ? cur.symbol : c; }
 
 function emptyTotals() {
   const o = {};
-  CURRENCIES.forEach(c => { o[c] = {cash:0,qr:0,exp:0}; });
+  CURRENCIES.forEach(c => { o[c.code] = {cash:0,qr:0,exp:0}; });
   return o;
 }
 
@@ -1672,10 +1808,7 @@ function renderDash(entries) {
 }
 
 function refreshDashUI() {
-  CURRENCIES.forEach(c => {
-    const d = dashByCur[c] || {cash:0,qr:0,exp:0};
-    $(`ctab-${c}`).classList.toggle('has', d.cash > 0 || d.qr > 0 || d.exp > 0);
-  });
+  renderCurTabs();
 
   const vis = filteredEntries();
   const billCount = new Set(vis.map((e, i) => e.transactionId || ('_row'+i))).size;
@@ -1731,7 +1864,7 @@ function switchBranchFilter(branch) {
 
 function switchCurTab(cur) {
   activeCurTab = cur;
-  CURRENCIES.forEach(c => $(`ctab-${c}`).classList.toggle('on', c === cur));
+  document.querySelectorAll('.ctab').forEach(btn => btn.classList.toggle('on', btn.id === 'ctab-' + cur));
   renderDashCur(cur);
 }
 
@@ -1758,6 +1891,9 @@ document.addEventListener('DOMContentLoaded', () => {
   renderBranchSegments();
   renderBranchFilters();
   renderManageBranchesList();
+  renderCurSelect();
+  renderCurTabs();
+  renderManageCurrenciesList();
   init();
 });
 </script>
