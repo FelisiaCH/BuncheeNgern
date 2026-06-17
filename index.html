@@ -626,6 +626,41 @@ option{background:#0E1526}
 [data-theme="light"] .bot-nav{background:rgba(244,246,251,.95)}
 [data-theme="light"] .nb{color:var(--txt-sub)}
 
+/* 💱 Currency Picker */
+.cur-picker-list{
+  max-height:320px;overflow-y:auto;margin-top:8px;
+  border:1px solid var(--brd);border-radius:var(--r-sm)
+}
+.cur-region-hdr{
+  font-size:10.5px;font-weight:700;letter-spacing:.6px;
+  color:var(--txt-muted);text-transform:uppercase;
+  padding:8px 12px 4px;background:var(--bg);
+  position:sticky;top:0;z-index:1
+}
+.cur-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;cursor:pointer;
+  border-top:1px solid var(--brd);
+  transition:background var(--ease)
+}
+.cur-row:hover:not(.is-added){background:var(--teal-dim)}
+.cur-row.is-added{cursor:default;opacity:.55}
+.cur-row-sym{
+  font-size:15px;font-weight:700;min-width:28px;
+  text-align:center;color:var(--teal);flex-shrink:0
+}
+.cur-row-info{flex:1;min-width:0}
+.cur-row-code{font-size:13px;font-weight:700}
+.cur-row-name{
+  font-size:11px;color:var(--txt-sub);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.cur-added-badge{
+  font-size:10px;font-weight:700;padding:2px 8px;
+  background:var(--teal-dim);color:var(--teal);
+  border-radius:6px;flex-shrink:0
+}
+
 /* ✨ Entrance Animations — transform+opacity only (GPU-accelerated, no reflow) */
 @keyframes tab-in    {from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none}}
 @keyframes ei-in     {from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none}}
@@ -888,19 +923,12 @@ option{background:#0E1526}
 
     <div class="settings-sec">
       <div class="settings-lbl" data-i18n="menuManageCurrencies">💱 Manage Currencies</div>
-      <p style="font-size:11.5px;color:var(--txt-sub);margin:4px 0 8px;line-height:1.6" data-i18n="hintCurSection">Enter a currency code (e.g. USD, THB, JPY, EUR, LAK). The symbol is looked up automatically — you can edit it if needed. For unknown codes, enter the symbol manually.</p>
       <div id="manage-currency-list" class="branch-manage-list"></div>
-      <div class="branch-add-row">
-        <input type="text" id="m-cur-code" class="fi" maxlength="10" autocomplete="off"
-               data-i18n-placeholder="placeholderCurCode"
-               onblur="onCurCodeBlur()"
-               onkeydown="if(event.key==='Enter'){event.preventDefault();addCurrency();}">
-        <input type="text" id="m-cur-symbol" class="fi" maxlength="5" autocomplete="off"
-               data-i18n-placeholder="placeholderCurSymbol"
-               onkeydown="if(event.key==='Enter'){event.preventDefault();addCurrency();}">
-        <div id="cur-sym-hint" class="msg warn hidden" data-i18n="hintCurSymbolNotFound">Symbol not found — enter manually</div>
-        <button type="button" class="menu-action-btn" onclick="addCurrency()" data-i18n="btnAddNewCurrency">➕ Add Currency</button>
-      </div>
+      <input type="text" id="cur-picker-search" class="fi" style="margin-top:10px"
+             autocomplete="off" oninput="renderCurrencyPicker(this.value)"
+             data-i18n-placeholder="placeholderSearchCurrency"
+             placeholder="Search currency, code, or country">
+      <div id="cur-picker-list" class="cur-picker-list"></div>
     </div>
   </div>
 
@@ -920,6 +948,7 @@ option{background:#0E1526}
   </nav>
 </div>
 
+<script src="i18n/currencies.js"></script>
 <script src="i18n/lang_meta.js"></script>
 <script src="i18n/lang_en.js"></script>
 <script src="i18n/lang_th.js"></script>
@@ -1274,6 +1303,7 @@ function commitCurrencies(list) {
   renderCurSelect();
   renderCurLines();
   renderManageCurrenciesList();
+  renderCurrencyPicker($('cur-picker-search')?.value || '');
   if (!$('scr-app').classList.contains('hidden') && !$('tab-dash').classList.contains('hidden')) {
     dashByBranchCur = buildTotals(dashEntries);
     dashByCur       = dashByBranchCur[activeBranchFilter];
@@ -1283,45 +1313,37 @@ function commitCurrencies(list) {
   }
 }
 
-function guessSymbol(code) {
-  try {
-    const s = (0).toLocaleString('en', {
-      style:'currency', currency: code.toUpperCase(),
-      minimumFractionDigits:0, maximumFractionDigits:0
-    }).replace(/[\d\s,\.]/g,'').trim();
-    return s || code;
-  } catch { return code; }
-}
-function onCurCodeBlur() {
-  const codeIn = $('m-cur-code');
-  const symIn  = $('m-cur-symbol');
-  const hint   = $('cur-sym-hint');
-  const code   = (codeIn?.value || '').trim().toUpperCase();
-  if (!code) return;
-  const sym = guessSymbol(code);
-  if (sym && sym !== code) {
-    if (symIn && !symIn.value.trim()) symIn.value = sym;
-    if (hint) hint.classList.add('hidden');
-  } else {
-    if (hint) hint.classList.remove('hidden');
+function renderCurrencyPicker(query) {
+  const list = $('cur-picker-list');
+  if (!list || !window.CURRENCY_DATA) return;
+  const q = (query || '').trim().toLowerCase();
+  const addedCodes = new Set(CURRENCIES.map(c => c.code.toUpperCase()));
+  let html = '';
+  for (const [region, items] of Object.entries(window.CURRENCY_DATA)) {
+    const filtered = q
+      ? items.filter(c =>
+          c.code.toLowerCase().includes(q) ||
+          c.name.toLowerCase().includes(q) ||
+          c.country.toLowerCase().includes(q))
+      : items;
+    if (!filtered.length) continue;
+    html += `<div class="cur-region-hdr">${esc(region)}</div>`;
+    for (const c of filtered) {
+      const added = addedCodes.has(c.code.toUpperCase());
+      html += `<div class="cur-row${added ? ' is-added' : ''}" data-code="${esc(c.code)}" data-symbol="${esc(c.symbol)}">` +
+        `<span class="cur-row-sym">${esc(c.symbol)}</span>` +
+        `<span class="cur-row-info">` +
+          `<div class="cur-row-code">${esc(c.code)} · ${esc(c.name)}</div>` +
+          `<div class="cur-row-name">${esc(c.country)}</div>` +
+        `</span>` +
+        (added ? `<span class="cur-added-badge">${t('labelCurrencyAdded')}</span>` : '') +
+        `</div>`;
+    }
   }
-}
-function addCurrency() {
-  const codeIn   = $('m-cur-code');
-  const symbolIn = $('m-cur-symbol');
-  const code   = (codeIn?.value   || '').trim().toUpperCase();
-  let   symbol = (symbolIn?.value || '').trim();
-  if (!code) { showToast(t('warnEnterCurCode'), 'warn'); return; }
-  if (!symbol) {
-    const auto = guessSymbol(code);
-    if (auto !== code) symbol = auto;
+  if (!html) {
+    html = `<div style="padding:16px;text-align:center;color:var(--txt-muted);font-size:13px">—</div>`;
   }
-  if (!symbol) { showToast(t('warnEnterCurSymbol'), 'warn'); return; }
-  if (CURRENCIES.some(c => c.code.toUpperCase() === code)) { showToast(t('warnCurExists'), 'warn'); return; }
-  commitCurrencies([...CURRENCIES, { code, symbol }]);
-  if (codeIn)   codeIn.value   = '';
-  if (symbolIn) symbolIn.value = '';
-  showToast(t('toastCurrencyAdded'));
+  list.innerHTML = html;
 }
 
 function removeCurrency(code) {
@@ -2064,6 +2086,21 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCurSelect();
   renderCurTabs();
   renderManageCurrenciesList();
+  renderCurrencyPicker('');
+
+  const pickerList = $('cur-picker-list');
+  if (pickerList) {
+    pickerList.addEventListener('click', e => {
+      const row = e.target.closest('.cur-row');
+      if (!row || row.classList.contains('is-added')) return;
+      const code   = row.dataset.code   || '';
+      const symbol = row.dataset.symbol || '';
+      if (!code || CURRENCIES.some(c => c.code.toUpperCase() === code.toUpperCase())) return;
+      commitCurrencies([...CURRENCIES, { code, symbol }]);
+      showToast(t('toastCurrencyAdded'));
+    });
+  }
+
   init();
 });
 </script>
