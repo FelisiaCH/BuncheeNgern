@@ -6,13 +6,14 @@ A mobile-first PWA for logging income & expenses across one or more branches. St
 
 - Multi-branch tracking, with branches manageable from the in-app Settings tab
 - Multi-currency per transaction — add several currency/amount lines to a single entry (e.g. pay partly in LAK, partly in THB); all lines share one Transaction ID
-- User-configurable currencies — add/remove from Settings; the list starts empty; typing a currency code and tabbing out fills the symbol automatically via the browser's `Intl` API (USD→$, THB→฿, LAK→₭, etc.), with manual override if the code is unknown
+- User-configurable currencies — a searchable, region-grouped picker (~85 world currencies plus popular crypto): search by code, name, or country and tap to add; only the code and symbol are stored, the list starts empty
 - Split payment per line — each currency line can be Cash, Online Payment, or Split (partly Cash + partly Online); a Split line writes two sheet rows sharing the same Transaction ID so the dashboard counts Cash Income and Online Payment Income correctly
+- Real Google sign-in authentication — every request is verified server-side against a Google Sheet allow-list (allow/deny per email); unknown emails are auto-logged for review
 - Telegram notifications to a private chat, a group, or both at once
-- 5 languages: Lao, Thai, English, Vietnamese, Burmese
+- 18 languages with a searchable language picker and automatic device-language detection on first launch (falls back to English)
 - Installable PWA with offline app-shell support
 
-> **Heads-up on security:** Sign-in here is a *soft gate*, not real access control. The Google credential (JWT) is decoded in the browser but never verified server-side, and the Apps Script backend is deployed with "Who has access: Anyone" (required so the Web App doesn't redirect to a login page). The sign-in screen exists to record "who logged this" on each entry for a trusted internal team — anyone who has the Web App URL can call it directly. Don't use this as access control for sensitive data. See [Hardening](#hardening-optional) if you need more.
+> **Security:** Sign-in is enforced server-side. Every API call carries the user's Google id_token; the backend verifies it directly with Google and checks the email against a Google Sheet allow-list before doing anything else. See [Security](#security) for details.
 
 ---
 
@@ -22,7 +23,7 @@ A mobile-first PWA for logging income & expenses across one or more branches. St
 - A Telegram bot token (from @BotFather) and at least one chat ID to notify
 - Somewhere to host the whole project folder over **HTTPS** (e.g. Cloudflare Pages, Netlify, GitHub Pages). Google Sign-In does **not** work from `file://` or a plain `http://` origin.
 
-There are **six** placeholder values to fill in before the app works:
+There are **seven** placeholder values to fill in before the app works:
 
 | File | Constant | What it is |
 | --- | --- | --- |
@@ -30,6 +31,7 @@ There are **six** placeholder values to fill in before the app works:
 | `Code.gs` | `DRIVE_FOLDER_ID` | ID of the Drive folder where slip images are stored |
 | `Code.gs` | `TELEGRAM_BOT_TOKEN` | Bot token from @BotFather |
 | `Code.gs` | `TELEGRAM_CHAT_IDS` | **Array** of chat IDs to notify — one or more, private and/or group |
+| `Code.gs` | `GOOGLE_CLIENT_ID` | OAuth Web client ID — **must be the exact same value** as `index.html`'s `GOOGLE_CLIENT_ID` below; the backend uses it to verify each request's token |
 | `index.html` | `GOOGLE_CLIENT_ID` | OAuth Web client ID (for Google Sign-In) |
 | `index.html` | `SCRIPT_URL` | Your deployed Apps Script Web App `/exec` URL |
 
@@ -51,7 +53,10 @@ There are **six** placeholder values to fill in before the app works:
    const DRIVE_FOLDER_ID = 'YOUR_DRIVE_FOLDER_ID_HERE';
    const TELEGRAM_BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN_HERE';
    const TELEGRAM_CHAT_IDS  = ['YOUR_TELEGRAM_CHAT_ID_HERE'];
+   const GOOGLE_CLIENT_ID   = 'YOUR_GOOGLE_CLIENT_ID_HERE';
    ```
+
+   `GOOGLE_CLIENT_ID` here must be the **same OAuth client ID** you'll set in `index.html` (§4) — the backend uses it to verify that incoming tokens were actually issued for this app.
 
 6. **Authorize the script.** In the editor toolbar, pick any function (e.g. `todayTab`) from the function dropdown and click **Run** once. Google will show a consent screen — approve it. This single consent covers *all* the scopes declared in `appsscript.json`, including the external-request permission needed to call Telegram and the Drive permission needed to upload slips. **If you skip this, entries still save to the sheet, but Telegram messages and slip uploads will silently fail.**
 7. Click **Deploy ▸ New deployment ▸ Web app**:
@@ -61,11 +66,28 @@ There are **six** placeholder values to fill in before the app works:
 
 > **Every time you edit `Code.gs` (or `appsscript.json`), you must ship a new deployment version** — go to **Deploy ▸ Manage deployments ▸ edit (pencil) ▸ Version: New version ▸ Deploy**. Editing the script alone does *not* update the live `/exec` URL's behavior.
 
+> **"Who has access: Anyone" no longer means anyone can use the app.** This setting only controls whether Apps Script redirects unauthenticated requests to a Google login page (it must stay "Anyone" so the Web App responds directly). Actual access control happens inside the script itself — every request is verified against Google and checked against the `AllowedUsers` sheet tab (see below) before any data is read or written.
+
 ### What the backend exposes
 
 - `doGet`: `?action=getTodayData` (today's entries) and `?action=getDateData&date=DD-MM-YYYY` (entries for a specific day's sheet tab)
 - `doPost`: `{ action: 'submitEntry', ... }` — uploads the slip (if any) to Drive, appends rows to the day's sheet tab (Cash and Online Payment lines write one row each; a Split line writes **two rows** — one `Cash` and one `Online Payment` — all sharing one `Transaction ID`), and sends the Telegram notification
 - Each day's sheet tab is created on first use with header row: `Timestamp, Staff Name, Item Name, Currency, Price, Type, Shop, Payment Method, Slip URL, Transaction ID`
+- **Both** of the above require a valid, allow-listed Google sign-in — see [Security](#security)
+
+### The `AllowedUsers` allow-list tab
+
+Every request — reads and writes alike — is checked against a sheet tab named **`AllowedUsers`**. You don't need to create it manually: the backend creates it automatically (with the header row below) the first time anyone tries to use the app.
+
+| Email | Status | Note | Last Login |
+| --- | --- | --- | --- |
+| `someone@example.com` | allow | | 17-06-2026 14:32:01 |
+
+- **`Status` = `allow`** (case-insensitive) — the request proceeds, and `Last Login` is updated to the current timestamp.
+- **`Status` = `deny`**, or any other value — the request is rejected.
+- **Email not in the sheet at all** — a new row is auto-appended with `Status = deny` and `Note = "Auto-logged on first access attempt"`, and the request is rejected.
+
+This means **the very first sign-in for every email — including your own, as the project owner — is automatically logged as `deny`.** After your first attempt, open the `AllowedUsers` tab and change your row's `Status` to `allow`. Repeat for every staff member's email the first time they try to sign in, or pre-populate the tab with known emails set to `allow` before rollout so nobody hits the denied screen.
 
 ---
 
@@ -94,11 +116,11 @@ This is required for the sign-in button to appear at all.
 1. Go to **console.cloud.google.com ▸ APIs & Services ▸ Credentials**.
 2. **Create Credentials ▸ OAuth client ID ▸ Application type: Web application**.
 3. Under **Authorized JavaScript origins**, add the exact origin where you'll host the app — e.g. `https://yourproject.pages.dev` (scheme + host **only**, no path, no trailing slash, and it must be `https://`, never `file://`). Add every origin you'll actually open the app from, including any dev/preview URL.
-4. Copy the **Client ID** — that's `GOOGLE_CLIENT_ID`.
+4. Copy the **Client ID** — that's `GOOGLE_CLIENT_ID`. Use this **same value** in both `index.html` (§4) and `Code.gs` (§1) — the backend checks every token's `aud` claim against its own copy, so a mismatch between the two will make every sign-in fail with "session expired."
 
 > If the sign-in button shows but clicking it does nothing, open the browser console — `origin is not allowed for the given client ID` means the origin in step 3 doesn't exactly match the URL the page is served from (including the scheme).
 
-If `GOOGLE_CLIENT_ID` is still left as the placeholder, or the Google Identity Services script fails to load, the login screen shows an inline hint explaining what's wrong instead of leaving an empty space.
+If `GOOGLE_CLIENT_ID` is still left as the placeholder, or the Google Identity Services script fails to load, the login screen shows an inline hint explaining what's wrong instead of leaving an empty space. Signing in successfully is only half the story now — the backend still has to verify the token and find the email allow-listed in `AllowedUsers` (§1) before any data loads or saves.
 
 ---
 
@@ -123,16 +145,16 @@ If `GOOGLE_CLIENT_ID` is still left as the placeholder, or the Google Identity S
 4. **Bump the service worker cache on every change.** `service-worker.js` defines:
 
    ```js
-   const CACHE = 'buncheengern-v1.1.8';
+   const CACHE = 'buncheengern-v1.1.14';
    ```
 
-   HTML pages are fetched network-first (so most changes to `index.html` reach users on their next reload automatically), but `i18n/lang_*.js`, icons, and other static assets are served cache-first. Whenever you change any static asset, bump the `CACHE` string (e.g. `v1.1.8`) so old cached files are evicted and the new ones are fetched.
+   HTML pages are fetched network-first (so most changes to `index.html` reach users on their next reload automatically), but `i18n/lang_*.js`, icons, and other static assets are served cache-first. Whenever you change any static asset, bump the `CACHE` string (e.g. `v1.1.14`) so old cached files are evicted and the new ones are fetched.
 
 ---
 
 ## 5. First run — add currencies
 
-**Currencies are not preset.** The list starts empty. Before you can log any entry, go to **Settings ▸ Manage Currencies** and add at least one currency with a code and symbol (e.g. code `LAK`, symbol `₭`). The app will warn you and block submission if no currencies are configured.
+**Currencies are not preset.** The list starts empty. Before you can log any entry, go to **Settings ▸ Manage Currencies**, search the built-in picker (~85 world currencies plus popular crypto — search by code, name, or country, e.g. "LAK" or "Laos") and tap to add at least one. The app will warn you and block submission if no currencies are configured.
 
 See [docs/USAGE.md](docs/USAGE.md) for the full day-to-day usage guide (logging entries, multi-currency transactions, dashboard, PWA install, etc.).
 
@@ -155,12 +177,17 @@ See [docs/USAGE.md](docs/USAGE.md) for the full day-to-day usage guide (logging 
 
 ---
 
-## Hardening (optional)
+## Security
 
-If you need sign-in to be real access control rather than a soft gate:
+Every API call — both reading the dashboard and saving an entry — is gated server-side before any other code runs:
 
-- Send the Google credential (JWT) to the backend on every write and verify it server-side — check the signature, that `aud` matches your `GOOGLE_CLIENT_ID`, and that the email is on an allow-list — before appending the row.
-- Keep "Who has access: Anyone" (Apps Script needs this to avoid login redirects), but have `doPost` reject any request whose token is missing or fails verification.
+- **Token verification:** the frontend sends the user's Google `id_token` with every request (as a query param on `doGet`, in the JSON body on `doPost`). The backend calls Google's `tokeninfo` endpoint directly, rejects the request if the call doesn't return 200, rejects if the token's `aud` doesn't match the backend's own `GOOGLE_CLIENT_ID`, and rejects if the email isn't marked verified by Google.
+- **Allow-list:** the verified email is then checked against the `AllowedUsers` sheet tab (see §1) — only `Status = allow` proceeds; `deny` or an unknown email is rejected (unknown emails are auto-logged as `deny` for the owner to review).
+- **Verified identity, not client-supplied:** once a request passes both checks, the backend overwrites the submitted entry's author fields (`staffName`, `userEmail`) with the name and email from the verified token — a client can't spoof who an entry is attributed to.
+- **Slip uploads:** the server independently re-validates every uploaded slip — rejects any MIME type outside `image/jpeg`, `image/png`, `image/webp`, `image/gif`, and rejects anything over 5 MB — regardless of what the browser already enforced.
+- **Slip links:** the dashboard only renders a slip link if its URL starts with `https://`; anything else (e.g. a `javascript:` URL from a manually edited sheet cell) is silently dropped.
+- **Input clamping:** free-text fields (`itemName`, `staffName`, `shop`) are truncated to 200 characters and the entry `type`/currency code are coerced to expected shapes before being written, so a direct API call can't write arbitrarily large or malformed rows.
+- **"Who has access: Anyone"** is still required at the Apps Script deployment level (otherwise unauthenticated requests get redirected to a Google login page instead of reaching your code), but it no longer means anyone can actually use the app — see §1.
 
 ---
 
@@ -168,8 +195,9 @@ If you need sign-in to be real access control rather than a soft gate:
 
 | Layer | Technology |
 | --- | --- |
-| Frontend | Single-file HTML/CSS/JS PWA, 5-language i18n (`i18n/lang_*.js`), installable via `service-worker.js` |
+| Frontend | Single-file HTML/CSS/JS PWA, 18-language i18n (`i18n/lang_*.js`), installable via `service-worker.js` |
 | Backend | Google Apps Script (`doGet`/`doPost` Web App), scopes declared in `appsscript.json` |
+| Auth | Google `id_token` verified server-side via Google's `tokeninfo` endpoint + a Google Sheet allow-list (`AllowedUsers` tab) — see [Security](#security) |
 | Storage | Google Sheets (one tab per day) + Google Drive (slip images) |
 | Notifications | Telegram Bot API, sent server-side to one or more chats, HTML-escaped |
 

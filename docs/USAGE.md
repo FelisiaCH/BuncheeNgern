@@ -4,15 +4,25 @@ Day-to-day guide for staff using the app after a fork has been set up. For initi
 
 ---
 
+## Signing in / access
+
+You sign in with your Google account. That's only the first step — every sign-in is checked against an allow-list maintained by your admin, so having a Google account alone doesn't grant access.
+
+If you sign in and see a message saying your account isn't authorized, that's expected the first time: your admin needs to add your email to the allow-list (or flip it from "deny" to "allow") before you can use the app. Let them know which Google account you signed in with, and try again once they've confirmed it's been added.
+
+If you're ever signed out unexpectedly with a "session expired" message, just sign in again — Google sessions expire periodically and this is normal.
+
+---
+
 ## First run: add currencies
 
-The currency list starts **empty**. Before you can log anything, open **Settings ▸ Manage Currencies** and add at least one entry:
+The currency list starts **empty**. Before you can log anything, open **Settings ▸ Manage Currencies** and add at least one entry using the search picker:
 
-1. Type a **code** (e.g. `LAK`) in the first field and tab out — for known codes (USD, THB, JPY, LAK, EUR, and many others) the symbol is filled in automatically. For unknown codes, the symbol field stays empty and a hint asks you to enter it manually. The symbol field is always editable if you need to override the auto-filled value.
-2. Confirm or edit the **symbol** in the second field.
-3. Tap **Add Currency**.
+1. Type into the search box — it matches against currency **code**, **name**, or **country** (e.g. typing `thai`, `th`, or `thailand` all find Thai Baht).
+2. Browse the results, grouped by region (Asia, Europe, Americas, Middle East & Africa, Oceania, Crypto).
+3. Tap a currency to add it. Currencies already added are marked and can't be added twice.
 
-Repeat for every currency your operation uses. The app blocks submission and the "+ Add Currency" row button with a warning until at least one currency exists.
+Repeat for every currency your operation uses. The app blocks submission with a warning until at least one currency exists.
 
 > Removing a currency later does **not** delete past entries — they still appear on the dashboard. The currency tab for it will continue to show as long as that day's data contains it.
 
@@ -73,8 +83,8 @@ The bill count in the Summary tab still shows as one entry (same Transaction ID)
 
 **Settings ▸ Manage Currencies** (scroll down in the Settings tab):
 
-- **Add:** type a currency code and tab out — the symbol is filled automatically for known codes (USD, THB, JPY, LAK, EUR, etc.); for unknown codes, enter the symbol manually. Then tap **Add Currency**. Duplicate codes (case-insensitive) are rejected.
-- **Remove:** tap ❌ next to any currency and confirm. Past entries using it are kept and still show on the dashboard.
+- **Add:** use the search picker — type a code, name, or country to filter the region-grouped list (~85 world currencies plus popular crypto), then tap a result to add it. Currencies already added are marked and tapping them again does nothing.
+- **Remove:** tap ❌ next to any currency in the added list and confirm. Past entries using it are kept and still show on the dashboard.
 - The dashboard's currency tabs always show the **union** of configured currencies and any currency code already present in the current day's data, so deleting a currency never hides historical totals.
 
 ---
@@ -115,7 +125,9 @@ Open the **Summary** tab (chart icon, bottom nav).
 
 ## Switching language
 
-Open **Settings**, scroll to the language selector, and tap a flag/label. The choice is saved on the device. Available languages: Lao, Thai, English, Vietnamese, Burmese.
+On first launch, the app automatically picks your device's language if it's one of the supported ones; otherwise it falls back to English.
+
+To change it yourself, open **Settings** and use the searchable language picker — type part of a language's name or its code to filter, then tap to switch. The choice is saved on the device. 18 languages are available.
 
 ---
 
