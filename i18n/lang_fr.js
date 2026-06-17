@@ -87,6 +87,8 @@ window.I18N_PARTS.fr = {
 
   errGeneric:            '❌ Une erreur est survenue : {msg}',
   confirmLogout:         'Voulez-vous vraiment vous déconnecter ?',
+  errAuthExpired:        '❌ Votre session a expiré — veuillez vous reconnecter',
+  errAuthDenied:         '❌ Ce compte n\'est pas autorisé à utiliser cette application',
   errFileTooLarge:       '❌ Le fichier dépasse 5 Mo',
   errLoadImage:          '❌ Impossible de charger l\'image',
   warnEnterItemName:     '⚠️ Veuillez entrer un nom d\'article',

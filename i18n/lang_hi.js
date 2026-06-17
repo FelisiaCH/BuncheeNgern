@@ -87,6 +87,8 @@ window.I18N_PARTS.hi = {
 
   errGeneric:            '❌ एक त्रुटि हुई: {msg}',
   confirmLogout:         'क्या आप लॉग आउट करना चाहते हैं?',
+  errAuthExpired:        '❌ आपका सेशन समाप्त हो गया है — कृपया फिर से साइन इन करें',
+  errAuthDenied:         '❌ इस खाते को इस ऐप का उपयोग करने की अनुमति नहीं है',
   errFileTooLarge:       '❌ फ़ाइल 5 MB से अधिक है',
   errLoadImage:          '❌ छवि लोड नहीं हो सकी',
   warnEnterItemName:     '⚠️ कृपया आइटम का नाम दर्ज करें',

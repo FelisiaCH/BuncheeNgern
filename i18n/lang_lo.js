@@ -87,6 +87,8 @@ window.I18N_PARTS.lo = {
 
   errGeneric:            '❌ ເກີດຂໍ້ຜິດພາດ: {msg}',
   confirmLogout:         'ທ່ານຕ້ອງການອອກຈາກລະບົບແທ້ບໍ?',
+  errAuthExpired:        '❌ ເຊສຊັນຂອງທ່ານໝົດອາຍຸແລ້ວ — ກະລຸນາເຂົ້າສູ່ລະບົບໃໝ່',
+  errAuthDenied:         '❌ ບັນຊີນີ້ບໍ່ໄດ້ຮັບອະນຸຍາດໃຫ້ໃຊ້ແອັບນີ້',
   errFileTooLarge:       '❌ ໄຟລ໌ໃຫຍ່ເກີນ 5 MB',
   errLoadImage:          '❌ ໂຫຼດຮູບພາບບໍ່ໄດ້',
   warnEnterItemName:     '⚠️ ກະລຸນາປ້ອນຊື່ລາຍການ',

@@ -87,6 +87,8 @@ window.I18N_PARTS.tl = {
 
   errGeneric:            '❌ Nagkaroon ng error: {msg}',
   confirmLogout:         'Sigurado ka bang gusto mong mag-log out?',
+  errAuthExpired:        '❌ Nag-expire na ang iyong session — paki-log in muli',
+  errAuthDenied:         '❌ Hindi pinapahintulutan ang account na ito na gumamit ng app na ito',
   errFileTooLarge:       '❌ Lumampas sa 5 MB ang file',
   errLoadImage:          '❌ Hindi ma-load ang larawan',
   warnEnterItemName:     '⚠️ Pakilagay ang pangalan ng item',

@@ -87,6 +87,8 @@ window.I18N_PARTS.ja = {
 
   errGeneric:            '❌ エラーが発生しました：{msg}',
   confirmLogout:         'ログアウトしてもよろしいですか？',
+  errAuthExpired:        '❌ セッションの有効期限が切れました — 再度ログインしてください',
+  errAuthDenied:         '❌ このアカウントはこのアプリの使用を許可されていません',
   errFileTooLarge:       '❌ ファイルが5MBを超えています',
   errLoadImage:          '❌ 画像を読み込めませんでした',
   warnEnterItemName:     '⚠️ 項目名を入力してください',

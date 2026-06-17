@@ -87,6 +87,8 @@ window.I18N_PARTS.en = {
 
   errGeneric:            '❌ An error occurred: {msg}',
   confirmLogout:         'Are you sure you want to log out?',
+  errAuthExpired:        '❌ Your session has expired — please sign in again',
+  errAuthDenied:         '❌ This account is not authorized to use this app',
   errFileTooLarge:       '❌ File exceeds 5 MB',
   errLoadImage:          '❌ Could not load image',
   warnEnterItemName:     '⚠️ Please enter an item name',

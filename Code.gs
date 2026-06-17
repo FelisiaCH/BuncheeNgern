@@ -7,6 +7,10 @@ const DRIVE_FOLDER_ID = 'YOUR_DRIVE_FOLDER_ID_HERE';
 const TELEGRAM_BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN_HERE';
 const TELEGRAM_CHAT_IDS  = ['YOUR_TELEGRAM_CHAT_ID_HERE'];
 
+// 🔐 Google Sign-In — must match the frontend's GOOGLE_CLIENT_ID exactly,
+// used to verify the 'aud' claim of incoming id_tokens
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID_HERE';
+
 const TIMESTAMP_FORMAT = 'dd-MM-yyyy HH:mm:ss';
 
 const ENTRY_HEADERS = ['Timestamp', 'Staff Name', 'Item Name', 'Currency',
@@ -17,6 +21,10 @@ function ss() { return SpreadsheetApp.openById(SPREADSHEET_ID); }
 // 🌐 GET Router
 function doGet(e) {
   try {
+    const email = verifyGoogleToken(e.parameter.idToken);
+    if (!email) return respond({ error: 'AUTH_EXPIRED' });
+    if (checkWhitelist(email) !== 'allow') return respond({ error: 'AUTH_DENIED' });
+
     const action = e.parameter.action;
     switch (action) {
       case 'getTodayData': return respond(getDateData(e.parameter.date || todayTab()));
@@ -32,6 +40,12 @@ function doGet(e) {
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
+
+    const email = verifyGoogleToken(data.idToken);
+    if (!email) return respond({ error: 'AUTH_EXPIRED' });
+    if (checkWhitelist(email) !== 'allow') return respond({ error: 'AUTH_DENIED' });
+    data.userEmail = email; // verified identity — discard any client-supplied value
+
     switch (data.action) {
       case 'submitEntry': return respond(submitEntry(data));
       default:            return respond({ error: `Unknown POST action: ${data.action}` });
@@ -52,6 +66,72 @@ function respond(obj) {
 // 📅 Today's Sheet-Tab Name
 function todayTab() {
   return Utilities.formatDate(new Date(), ss().getSpreadsheetTimeZone(), 'dd-MM-yyyy');
+}
+
+// 🔐 Google id_token Verification
+function verifyGoogleToken(idToken) {
+  if (!idToken) return null;
+  const resp = UrlFetchApp.fetch(
+    'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken),
+    { muteHttpExceptions: true }
+  );
+  if (resp.getResponseCode() !== 200) return null;
+
+  let payload;
+  try {
+    payload = JSON.parse(resp.getContentText());
+  } catch (err) {
+    return null;
+  }
+
+  if (payload.aud !== GOOGLE_CLIENT_ID) return null;
+  if (payload.email_verified !== 'true' && payload.email_verified !== true) return null;
+  if (!payload.email) return null;
+
+  return payload.email;
+}
+
+// ✅ Email Whitelist — sheet tab 'AllowedUsers': Email | Status | Note | Last Login
+const WHITELIST_TAB     = 'AllowedUsers';
+const WHITELIST_HEADERS = ['Email', 'Status', 'Note', 'Last Login'];
+
+function createWhitelistSheet() {
+  const sheet = ss().insertSheet(WHITELIST_TAB);
+  sheet.getRange(1, 1, 1, WHITELIST_HEADERS.length)
+       .setValues([WHITELIST_HEADERS])
+       .setFontWeight('bold');
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
+function checkWhitelist(email) {
+  const normalized = String(email || '').trim().toLowerCase();
+  if (!normalized) return 'deny';
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const sheet = ss().getSheetByName(WHITELIST_TAB) || createWhitelistSheet();
+    const rows  = sheet.getDataRange().getValues();
+    const now   = Utilities.formatDate(new Date(), ss().getSpreadsheetTimeZone(), TIMESTAMP_FORMAT);
+
+    for (let i = 1; i < rows.length; i++) {
+      const rowEmail = String(rows[i][0] || '').trim().toLowerCase();
+      if (rowEmail !== normalized) continue;
+      const status = String(rows[i][1] || '').trim().toLowerCase();
+      if (status === 'allow') {
+        sheet.getRange(i + 1, 4).setValue(now);
+        return 'allow';
+      }
+      return 'deny';
+    }
+
+    // Unknown email — auto-log as deny; owner promotes to 'allow' manually
+    sheet.appendRow([email, 'deny', 'Auto-logged on first access attempt', now]);
+    return 'deny';
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // 🛡️ Defensive input normalization — no-op for well-formed app submissions

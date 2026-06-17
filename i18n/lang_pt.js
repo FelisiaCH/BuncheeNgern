@@ -87,6 +87,8 @@ window.I18N_PARTS.pt = {
 
   errGeneric:            '❌ Ocorreu um erro: {msg}',
   confirmLogout:         'Tem certeza de que deseja sair?',
+  errAuthExpired:        '❌ Sua sessão expirou — faça login novamente',
+  errAuthDenied:         '❌ Esta conta não está autorizada a usar este aplicativo',
   errFileTooLarge:       '❌ O arquivo excede 5 MB',
   errLoadImage:          '❌ Não foi possível carregar a imagem',
   warnEnterItemName:     '⚠️ Por favor, digite o nome do item',

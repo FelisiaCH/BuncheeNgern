@@ -87,6 +87,8 @@ window.I18N_PARTS.ms = {
 
   errGeneric:            '❌ Ralat berlaku: {msg}',
   confirmLogout:         'Adakah anda pasti mahu log keluar?',
+  errAuthExpired:        '❌ Sesi anda telah tamat tempoh — sila log masuk semula',
+  errAuthDenied:         '❌ Akaun ini tidak dibenarkan menggunakan aplikasi ini',
   errFileTooLarge:       '❌ Fail melebihi 5 MB',
   errLoadImage:          '❌ Tidak dapat memuatkan imej',
   warnEnterItemName:     '⚠️ Sila masukkan nama item',

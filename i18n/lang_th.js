@@ -87,6 +87,8 @@ window.I18N_PARTS.th = {
 
   errGeneric:            '❌ เกิดข้อผิดพลาด: {msg}',
   confirmLogout:         'ต้องการออกจากระบบหรือไม่?',
+  errAuthExpired:        '❌ เซสชันของคุณหมดอายุ — กรุณาเข้าสู่ระบบอีกครั้ง',
+  errAuthDenied:         '❌ บัญชีนี้ไม่ได้รับอนุญาตให้ใช้แอปนี้',
   errFileTooLarge:       '❌ ไฟล์ใหญ่เกิน 5 MB',
   errLoadImage:          '❌ โหลดรูปภาพไม่ได้',
   warnEnterItemName:     '⚠️ กรุณากรอกชื่อรายการ',

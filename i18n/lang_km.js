@@ -87,6 +87,8 @@ window.I18N_PARTS.km = {
 
   errGeneric:            '❌ មានកំហុសកើតឡើង៖ {msg}',
   confirmLogout:         'តើអ្នកប្រាកដជាចង់ចាកចេញមែនទេ?',
+  errAuthExpired:        '❌ សម័យចូលប្រើរបស់អ្នកបានផុតកំណត់ — សូមចូលប្រើម្តងទៀត',
+  errAuthDenied:         '❌ គណនីនេះមិនត្រូវបានអនុញ្ញាតឱ្យប្រើកម្មវិធីនេះទេ',
   errFileTooLarge:       '❌ ឯកសារលើសពី 5 MB',
   errLoadImage:          '❌ មិនអាចផ្ទុករូបភាពបានទេ',
   warnEnterItemName:     '⚠️ សូមបញ្ចូលឈ្មោះមុខទំនិញ',

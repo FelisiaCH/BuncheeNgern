@@ -87,6 +87,8 @@ window.I18N_PARTS.vi = {
 
   errGeneric:            '❌ Đã xảy ra lỗi: {msg}',
   confirmLogout:         'Bạn có chắc muốn đăng xuất?',
+  errAuthExpired:        '❌ Phiên đăng nhập của bạn đã hết hạn — vui lòng đăng nhập lại',
+  errAuthDenied:         '❌ Tài khoản này không được phép sử dụng ứng dụng này',
   errFileTooLarge:       '❌ Tệp vượt quá 5 MB',
   errLoadImage:          '❌ Không thể tải hình ảnh',
   warnEnterItemName:     '⚠️ Vui lòng nhập tên mục',

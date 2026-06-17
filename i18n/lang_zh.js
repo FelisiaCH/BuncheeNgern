@@ -87,6 +87,8 @@ window.I18N_PARTS.zh = {
 
   errGeneric:            '❌ 发生错误：{msg}',
   confirmLogout:         '确定要退出登录吗？',
+  errAuthExpired:        '❌ 您的登录会话已过期 — 请重新登录',
+  errAuthDenied:         '❌ 此账户未获授权使用本应用',
   errFileTooLarge:       '❌ 文件超过 5 MB',
   errLoadImage:          '❌ 无法加载图片',
   warnEnterItemName:     '⚠️ 请输入项目名称',

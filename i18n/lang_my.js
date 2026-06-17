@@ -87,6 +87,8 @@ window.I18N_PARTS.my = {
 
   errGeneric:            '❌ အမှားအယွင်း ဖြစ်ပွားသည်- {msg}',
   confirmLogout:         'ထွက်မှာ သေချာပါသလား?',
+  errAuthExpired:        '❌ သင့်စက်ရှင် သက်တမ်းကုန်သွားပါပြီ — ပြန်လည်ဝင်ရောက်ပါ',
+  errAuthDenied:         '❌ ဤအကောင့်သည် ဤအက်ပ်ကို အသုံးပြုရန် ခွင့်ပြုထားခြင်း မရှိပါ',
   errFileTooLarge:       '❌ ဖိုင်သည် 5 MB ထက် ကြီးသည်',
   errLoadImage:          '❌ ပုံကို ဖွင့်၍ မရပါ',
   warnEnterItemName:     '⚠️ ပစ္စည်းအမည်ကို ထည့်ပါ',

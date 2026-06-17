@@ -87,6 +87,8 @@ window.I18N_PARTS.es = {
 
   errGeneric:            '❌ Ocurrió un error: {msg}',
   confirmLogout:         '¿Seguro que deseas cerrar sesión?',
+  errAuthExpired:        '❌ Tu sesión ha caducado — vuelve a iniciar sesión',
+  errAuthDenied:         '❌ Esta cuenta no está autorizada para usar esta aplicación',
   errFileTooLarge:       '❌ El archivo supera los 5 MB',
   errLoadImage:          '❌ No se pudo cargar la imagen',
   warnEnterItemName:     '⚠️ Por favor ingresa el nombre del artículo',

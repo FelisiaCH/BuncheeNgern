@@ -87,6 +87,8 @@ window.I18N_PARTS.id = {
 
   errGeneric:            '❌ Terjadi kesalahan: {msg}',
   confirmLogout:         'Apakah Anda yakin ingin keluar?',
+  errAuthExpired:        '❌ Sesi Anda telah berakhir — silakan masuk kembali',
+  errAuthDenied:         '❌ Akun ini tidak diizinkan menggunakan aplikasi ini',
   errFileTooLarge:       '❌ Ukuran file melebihi 5 MB',
   errLoadImage:          '❌ Gagal memuat gambar',
   warnEnterItemName:     '⚠️ Silakan masukkan nama barang',

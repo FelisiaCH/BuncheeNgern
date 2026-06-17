@@ -87,6 +87,8 @@ window.I18N_PARTS.de = {
 
   errGeneric:            '❌ Ein Fehler ist aufgetreten: {msg}',
   confirmLogout:         'Möchten Sie sich wirklich abmelden?',
+  errAuthExpired:        '❌ Ihre Sitzung ist abgelaufen — bitte melden Sie sich erneut an',
+  errAuthDenied:         '❌ Dieses Konto ist nicht berechtigt, diese App zu verwenden',
   errFileTooLarge:       '❌ Datei überschreitet 5 MB',
   errLoadImage:          '❌ Bild konnte nicht geladen werden',
   warnEnterItemName:     '⚠️ Bitte einen Artikelnamen eingeben',

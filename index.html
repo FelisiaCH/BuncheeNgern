@@ -1035,6 +1035,7 @@ const API_TIMEOUT      = 15000;
 const A = {
   me:        null,
   userEmail: '',
+  idToken:   null,
   fd: { type:'income', shop: BRANCHES[0], pay:'Cash', splitCash:'', splitOnline:'', extraCur: [] },
   slip:      null,
 };
@@ -1539,6 +1540,11 @@ function _apiFetch(input, init) {
       if (!r.ok) throw new Error(`HTTP ${r.status}${r.statusText ? ' ' + r.statusText : ''}`);
       return r.json();
     })
+    .then(data => {
+      if (data && data.error === 'AUTH_EXPIRED') { forceReLogin(); throw new Error(t('errAuthExpired')); }
+      if (data && data.error === 'AUTH_DENIED')  { forceReLogin(); throw new Error(t('errAuthDenied')); }
+      return data;
+    })
     .catch(e => {
       clearTimeout(timer);
       if (e.name === 'AbortError') throw new Error(`Request timed out after ${API_TIMEOUT / 1000}s — the server took too long to respond`);
@@ -1550,6 +1556,7 @@ function apiGet(params) {
   if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return Promise.reject(new Error('SCRIPT_URL is not set — see README for setup instructions'));
   const url = new URL(SCRIPT_URL);
   Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
+  url.searchParams.set('idToken', A.idToken || '');
   return _apiFetch(url, { redirect:'follow' });
 }
 function apiPost(bodyObj) {
@@ -1558,14 +1565,14 @@ function apiPost(bodyObj) {
     method:  'POST',
     redirect: 'follow',
     headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-    body:    JSON.stringify(bodyObj),
+    body:    JSON.stringify({ ...bodyObj, idToken: A.idToken || '' }),
   });
 }
 
 // 💾 Session Storage
 const SESSION_KEY = 'userSession';
-function saveSession(name, email, shop) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ name, email, shop }));
+function saveSession(name, email, shop, idToken) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ name, email, shop, idToken }));
 }
 function loadSession() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch { return null; }
@@ -1583,7 +1590,8 @@ function handleGoogleCredential(resp) {
   const payload = decodeJwtPayload(resp.credential);
   A.me = payload.name || payload.email || '';
   A.userEmail = payload.email || '';
-  saveSession(A.me, A.userEmail, A.fd.shop);
+  A.idToken = resp.credential;
+  saveSession(A.me, A.userEmail, A.fd.shop, A.idToken);
   enterApp(A.me);
 }
 
@@ -1622,6 +1630,7 @@ async function init() {
   if (session?.name && session?.email) {
     A.me = session.name;
     A.userEmail = session.email;
+    A.idToken = session.idToken || null;
     selectBranchSegment(session.shop);
     enterApp(session.name);
     return;
@@ -1644,7 +1653,17 @@ function doLogout() {
   clearSession();
   A.me = null;
   A.userEmail = '';
+  A.idToken = null;
   A.fd.shop = BRANCHES[0];
+  if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect();
+  showScr('scr-login');
+}
+
+function forceReLogin() {
+  clearSession();
+  A.me = null;
+  A.userEmail = '';
+  A.idToken = null;
   if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect();
   showScr('scr-login');
 }

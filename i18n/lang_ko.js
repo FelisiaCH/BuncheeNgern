@@ -87,6 +87,8 @@ window.I18N_PARTS.ko = {
 
   errGeneric:            '❌ 오류가 발생했습니다: {msg}',
   confirmLogout:         '로그아웃하시겠습니까?',
+  errAuthExpired:        '❌ 세션이 만료되었습니다 — 다시 로그인해 주세요',
+  errAuthDenied:         '❌ 이 계정은 이 앱을 사용할 권한이 없습니다',
   errFileTooLarge:       '❌ 파일이 5MB를 초과합니다',
   errLoadImage:          '❌ 이미지를 불러올 수 없습니다',
   warnEnterItemName:     '⚠️ 항목 이름을 입력해 주세요',
