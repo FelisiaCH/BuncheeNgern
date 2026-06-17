@@ -54,8 +54,20 @@ function todayTab() {
   return Utilities.formatDate(new Date(), ss().getSpreadsheetTimeZone(), 'dd-MM-yyyy');
 }
 
+// 🛡️ Defensive input normalization — no-op for well-formed app submissions
+function clampStr(s, max) {
+  s = String(s == null ? '' : s);
+  return s.length > max ? s.slice(0, max) : s;
+}
+
 // 📝 Entry Submission — upload slip, append row, notify Telegram
 function submitEntry(data) {
+  data.itemName  = clampStr(data.itemName, 200);
+  data.staffName = clampStr(data.staffName, 200);
+  data.shop      = clampStr(data.shop, 200);
+  data.type      = data.type === 'Income' ? 'Income' : 'Expense';
+  data.currency  = clampStr(data.currency, 10);
+
   // Step 1: upload slip image to Drive (if provided)
   let fileUrl = '';
   if (data.fileData) {
@@ -67,6 +79,7 @@ function submitEntry(data) {
   const amounts = Array.isArray(data.amounts) && data.amounts.length
     ? data.amounts
     : [{ currency: data.currency, price: data.price }];
+  amounts.forEach(a => { a.currency = clampStr(a.currency, 10); });
   const transactionId = Utilities.getUuid();
 
   const lock = LockService.getScriptLock();
@@ -169,11 +182,20 @@ function normalizeTimestamp(value, timeZone) {
 }
 
 // 📤 Slip Upload to Drive
+const ALLOWED_SLIP_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_SLIP_BYTES = 5 * 1024 * 1024;
+
 function uploadSlipToDrive(fileName, fileDataBase64, mimeType) {
-  const folder  = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+  if (ALLOWED_SLIP_MIME_TYPES.indexOf(mimeType) === -1) {
+    throw new Error('Invalid file type');
+  }
   const decoded = Utilities.base64Decode(fileDataBase64);
-  const blob    = Utilities.newBlob(decoded, mimeType || 'image/jpeg', fileName || 'slip.jpg');
-  const file    = folder.createFile(blob);
+  if (decoded.length > MAX_SLIP_BYTES) {
+    throw new Error('File too large');
+  }
+  const folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+  const blob   = Utilities.newBlob(decoded, mimeType, fileName || 'slip.jpg');
+  const file   = folder.createFile(blob);
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   return `https://drive.google.com/file/d/${file.getId()}/view`;
 }

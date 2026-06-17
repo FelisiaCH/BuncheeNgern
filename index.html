@@ -1500,6 +1500,10 @@ function fmtN(n) {
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+function safeUrl(u) {
+  const s = String(u || '').trim();
+  return /^https:\/\//i.test(s) ? s : '';
+}
 function showScr(id) {
   ['scr-load','scr-login','scr-app'].forEach(s => $(s).classList.toggle('hidden', s!==id));
 }
@@ -2075,8 +2079,9 @@ function renderEntryList(entries) {
       ? (isCash ? t('actionCashIncome') : t('actionQRIncome'))
       : t('actionExpense');
     const actionColor = isInc ? 'var(--green)' : 'var(--red)';
-    const slipEl = e.slipUrl
-      ? `&nbsp;·&nbsp;<a class="slip-a" href="${esc(e.slipUrl)}" target="_blank" rel="noopener">${t('slipLink')}</a>`
+    const safeSlip = safeUrl(e.slipUrl);
+    const slipEl = safeSlip
+      ? `&nbsp;·&nbsp;<a class="slip-a" href="${esc(safeSlip)}" target="_blank" rel="noopener">${t('slipLink')}</a>`
       : '';
     return `<div class="ei" style="animation-delay:${delay}ms">
       <div class="ei-ic ${isInc?'inc':'exp'}">${isInc?'↑':'↓'}</div>
