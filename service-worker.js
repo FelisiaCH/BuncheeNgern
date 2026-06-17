@@ -1,4 +1,4 @@
-const CACHE = 'buncheengern-v1.1.11';
+const CACHE = 'buncheengern-v1.1.12';
 const ASSETS = [
   './', './index.html',
   './i18n/currencies.js',
