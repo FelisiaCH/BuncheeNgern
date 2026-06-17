@@ -1541,8 +1541,12 @@ function _apiFetch(input, init) {
       return r.json();
     })
     .then(data => {
-      if (data && data.error === 'AUTH_EXPIRED') { forceReLogin(); throw new Error(t('errAuthExpired')); }
-      if (data && data.error === 'AUTH_DENIED')  { forceReLogin(); throw new Error(t('errAuthDenied')); }
+      if (data && data.error === 'AUTH_EXPIRED') {
+        const err = new Error(t('errAuthExpired'));
+        err.authCode = 'AUTH_EXPIRED';
+        throw err;
+      }
+      if (data && data.error === 'AUTH_DENIED') { forceReLogin(); throw new Error(t('errAuthDenied')); }
       return data;
     })
     .catch(e => {
@@ -1552,21 +1556,46 @@ function _apiFetch(input, init) {
       throw e;
     });
 }
+// Retries once after a silent token refresh if the backend says the token expired.
+// buildRequest() must rebuild [input, init] fresh each call so the retry picks up A.idToken.
+function _apiFetchWithReauth(buildRequest, isRetry) {
+  const [input, init] = buildRequest();
+  return _apiFetch(input, init).catch(e => {
+    if (e && e.authCode === 'AUTH_EXPIRED') {
+      if (!isRetry) {
+        return trySilentReauth().then(newToken => {
+          if (newToken) {
+            A.idToken = newToken;
+            return _apiFetchWithReauth(buildRequest, true);
+          }
+          forceReLogin();
+          throw e;
+        });
+      }
+      forceReLogin();
+    }
+    throw e;
+  });
+}
 function apiGet(params) {
   if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return Promise.reject(new Error('SCRIPT_URL is not set — see README for setup instructions'));
-  const url = new URL(SCRIPT_URL);
-  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
-  url.searchParams.set('idToken', A.idToken || '');
-  return _apiFetch(url, { redirect:'follow' });
+  const buildRequest = () => {
+    const url = new URL(SCRIPT_URL);
+    Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
+    url.searchParams.set('idToken', A.idToken || '');
+    return [url, { redirect:'follow' }];
+  };
+  return _apiFetchWithReauth(buildRequest);
 }
 function apiPost(bodyObj) {
   if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return Promise.reject(new Error('SCRIPT_URL is not set — see README for setup instructions'));
-  return _apiFetch(SCRIPT_URL, {
+  const buildRequest = () => [SCRIPT_URL, {
     method:  'POST',
     redirect: 'follow',
     headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
     body:    JSON.stringify({ ...bodyObj, idToken: A.idToken || '' }),
-  });
+  }];
+  return _apiFetchWithReauth(buildRequest);
 }
 
 // 💾 Session Storage
@@ -1586,12 +1615,45 @@ function decodeJwtPayload(token) {
     '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('')));
 }
 
+let _reauthResolve = null;
+
+function trySilentReauth() {
+  return new Promise(resolve => {
+    if (!window.google?.accounts?.id) { resolve(null); return; }
+    let settled = false;
+    const timer = setTimeout(() => settle(null), 3500);
+    function settle(token) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      _reauthResolve = null;
+      resolve(token);
+    }
+    _reauthResolve = settle;
+    try {
+      google.accounts.id.prompt();
+    } catch {
+      settle(null);
+    }
+  });
+}
+
 function handleGoogleCredential(resp) {
   const payload = decodeJwtPayload(resp.credential);
   A.me = payload.name || payload.email || '';
   A.userEmail = payload.email || '';
   A.idToken = resp.credential;
   saveSession(A.me, A.userEmail, A.fd.shop, A.idToken);
+
+  if (_reauthResolve) {
+    // A silent token refresh was in flight — resolve it without resetting
+    // the dashboard/app screen the user is already looking at.
+    const resolve = _reauthResolve;
+    _reauthResolve = null;
+    resolve(resp.credential);
+    return;
+  }
+
   enterApp(A.me);
 }
 
@@ -1613,7 +1675,7 @@ function initGoogleSignIn(retries = 20) {
   }
 
   try {
-    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential, auto_select: true });
     google.accounts.id.renderButton($('g-signin-btn'), { theme: 'outline', size: 'medium', shape: 'pill' });
   } catch (err) {
     showSignInWarn('googleSignInError');

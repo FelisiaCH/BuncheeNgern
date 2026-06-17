@@ -120,15 +120,13 @@ function checkWhitelist(email) {
       const rowEmail = String(rows[i][0] || '').trim().toLowerCase();
       if (rowEmail !== normalized) continue;
       const status = String(rows[i][1] || '').trim().toLowerCase();
-      if (status === 'allow') {
-        sheet.getRange(i + 1, 4).setValue(now);
-        return 'allow';
-      }
-      return 'deny';
+      sheet.getRange(i + 1, 4).setValue(now);
+      return status === 'allow' ? 'allow' : 'deny';
     }
 
-    // Unknown email — auto-log as deny; owner promotes to 'allow' manually
-    sheet.appendRow([email, 'deny', 'Auto-logged on first access attempt', now]);
+    // Unknown email — auto-log as deny, storing the NORMALIZED email so a
+    // repeat attempt matches this same row above instead of appending again
+    sheet.appendRow([normalized, 'deny', 'Auto-logged on first access attempt', now]);
     return 'deny';
   } finally {
     lock.releaseLock();
