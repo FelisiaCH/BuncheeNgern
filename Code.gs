@@ -18,6 +18,19 @@ const ENTRY_HEADERS = ['Timestamp', 'Staff Name', 'Item Name', 'Currency',
 
 function ss() { return SpreadsheetApp.openById(SPREADSHEET_ID); }
 
+// 🧹 Shared helpers
+function normalizeEmail(email) { return String(email || '').trim().toLowerCase(); }
+
+// Return the named sheet tab, creating it (with a bold, frozen header row) if absent.
+function getOrCreateSheet(name, headers) {
+  const existing = ss().getSheetByName(name);
+  if (existing) return existing;
+  const sheet = ss().insertSheet(name);
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
 // 🌐 GET Router — reads only; requires a valid app session token
 function doGet(e) {
   try {
@@ -107,28 +120,19 @@ function verifyGoogleToken(idToken) {
 const WHITELIST_TAB     = 'AllowedUsers';
 const WHITELIST_HEADERS = ['Email', 'Status', 'Note', 'Last Login'];
 
-function createWhitelistSheet() {
-  const sheet = ss().insertSheet(WHITELIST_TAB);
-  sheet.getRange(1, 1, 1, WHITELIST_HEADERS.length)
-       .setValues([WHITELIST_HEADERS])
-       .setFontWeight('bold');
-  sheet.setFrozenRows(1);
-  return sheet;
-}
-
 function checkWhitelist(email) {
-  const normalized = String(email || '').trim().toLowerCase();
+  const normalized = normalizeEmail(email);
   if (!normalized) return 'deny';
 
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    const sheet = ss().getSheetByName(WHITELIST_TAB) || createWhitelistSheet();
+    const sheet = getOrCreateSheet(WHITELIST_TAB, WHITELIST_HEADERS);
     const rows  = sheet.getDataRange().getValues();
     const now   = Utilities.formatDate(new Date(), ss().getSpreadsheetTimeZone(), TIMESTAMP_FORMAT);
 
     for (let i = 1; i < rows.length; i++) {
-      const rowEmail = String(rows[i][0] || '').trim().toLowerCase();
+      const rowEmail = normalizeEmail(rows[i][0]);
       if (rowEmail !== normalized) continue;
       const status = String(rows[i][1] || '').trim().toLowerCase();
       sheet.getRange(i + 1, 4).setValue(now);
@@ -152,14 +156,7 @@ const SESSIONS_TAB     = 'Sessions';
 const SESSION_HEADERS  = ['Token', 'Email', 'Name', 'Created', 'Expires'];
 
 function getSessionsSheet() {
-  const existing = ss().getSheetByName(SESSIONS_TAB);
-  if (existing) return existing;
-  const sheet = ss().insertSheet(SESSIONS_TAB);
-  sheet.getRange(1, 1, 1, SESSION_HEADERS.length)
-       .setValues([SESSION_HEADERS])
-       .setFontWeight('bold');
-  sheet.setFrozenRows(1);
-  return sheet;
+  return getOrCreateSheet(SESSIONS_TAB, SESSION_HEADERS);
 }
 
 function createSession(email, name) {
@@ -171,7 +168,7 @@ function createSession(email, name) {
     const token   = Utilities.getUuid() + Utilities.getUuid().replace(/-/g, '');
     const now     = new Date();
     const expires = new Date(now.getTime() + SESSION_TTL_MS);
-    sheet.appendRow([token, String(email || '').trim().toLowerCase(), name, now, expires]);
+    sheet.appendRow([token, normalizeEmail(email), name, now, expires]);
     return token;
   } finally {
     lock.releaseLock();
