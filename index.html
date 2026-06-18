@@ -1036,9 +1036,9 @@ const API_TIMEOUT      = 15000;
 
 // 🗂️ App & Dashboard State
 const A = {
-  me:        null,
-  userEmail: '',
-  idToken:   null,
+  me:          null,
+  userEmail:   '',
+  sessionToken: null,
   fd: { type:'income', shop: BRANCHES[0], pay:'Cash', splitCash:'', splitOnline:'', extraCur: [] },
   slip:      null,
 };
@@ -1540,6 +1540,9 @@ function showOv(msg) {
 function hideOv() { $('ov').classList.add('hidden'); }
 
 // 📡 API Request Layer
+// When the backend reports the app session is gone (expired/invalid token) or the
+// user is no longer allow-listed, drop straight to the login screen — the user
+// signs in with Google again to mint a fresh 30-day session token.
 function _apiFetch(input, init) {
   const ctrl  = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), API_TIMEOUT);
@@ -1551,11 +1554,17 @@ function _apiFetch(input, init) {
     })
     .then(data => {
       if (data && data.error === 'AUTH_EXPIRED') {
+        forceReLogin();
         const err = new Error(t('errAuthExpired'));
         err.authCode = 'AUTH_EXPIRED';
         throw err;
       }
-      if (data && data.error === 'AUTH_DENIED') { forceReLogin(); throw new Error(t('errAuthDenied')); }
+      if (data && data.error === 'AUTH_DENIED') {
+        forceReLogin();
+        const err = new Error(t('errAuthDenied'));
+        err.authCode = 'AUTH_DENIED';
+        throw err;
+      }
       return data;
     })
     .catch(e => {
@@ -1565,52 +1574,38 @@ function _apiFetch(input, init) {
       throw e;
     });
 }
-// Retries once after a silent token refresh if the backend says the token expired.
-// buildRequest() must rebuild [input, init] fresh each call so the retry picks up A.idToken.
-function _apiFetchWithReauth(buildRequest, isRetry) {
-  const [input, init] = buildRequest();
-  return _apiFetch(input, init).catch(e => {
-    if (e && e.authCode === 'AUTH_EXPIRED') {
-      if (!isRetry) {
-        return trySilentReauth().then(newToken => {
-          if (newToken) {
-            A.idToken = newToken;
-            return _apiFetchWithReauth(buildRequest, true);
-          }
-          forceReLogin();
-          throw e;
-        });
-      }
-      forceReLogin();
-    }
-    throw e;
+// Exchange a one-time Google id_token for an app session token. This IS the
+// authentication step, so it carries no session token and bypasses the normal flow.
+function apiAuthenticate(idToken) {
+  if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return Promise.reject(new Error('SCRIPT_URL is not set — see README for setup instructions'));
+  return _apiFetch(SCRIPT_URL, {
+    method:  'POST',
+    redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+    body:    JSON.stringify({ action: 'authenticate', idToken }),
   });
 }
 function apiGet(params) {
   if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return Promise.reject(new Error('SCRIPT_URL is not set — see README for setup instructions'));
-  const buildRequest = () => {
-    const url = new URL(SCRIPT_URL);
-    Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
-    url.searchParams.set('idToken', A.idToken || '');
-    return [url, { redirect:'follow' }];
-  };
-  return _apiFetchWithReauth(buildRequest);
+  const url = new URL(SCRIPT_URL);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
+  url.searchParams.set('sessionToken', A.sessionToken || '');
+  return _apiFetch(url, { redirect:'follow' });
 }
 function apiPost(bodyObj) {
   if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return Promise.reject(new Error('SCRIPT_URL is not set — see README for setup instructions'));
-  const buildRequest = () => [SCRIPT_URL, {
+  return _apiFetch(SCRIPT_URL, {
     method:  'POST',
     redirect: 'follow',
     headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-    body:    JSON.stringify({ ...bodyObj, idToken: A.idToken || '' }),
-  }];
-  return _apiFetchWithReauth(buildRequest);
+    body:    JSON.stringify({ ...bodyObj, sessionToken: A.sessionToken || '' }),
+  });
 }
 
 // 💾 Session Storage
 const SESSION_KEY = 'userSession';
-function saveSession(name, email, shop, idToken) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ name, email, shop, idToken }));
+function saveSession(name, email, shop, sessionToken) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ name, email, shop, sessionToken }));
 }
 function loadSession() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch { return null; }
@@ -1618,52 +1613,21 @@ function loadSession() {
 function clearSession() { localStorage.removeItem(SESSION_KEY); }
 
 // 🔐 Google Sign-In (Identity Services)
-function decodeJwtPayload(token) {
-  const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-  return JSON.parse(decodeURIComponent(atob(base64).split('').map(c =>
-    '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('')));
-}
-
-let _reauthResolve = null;
-
-function trySilentReauth() {
-  return new Promise(resolve => {
-    if (!window.google?.accounts?.id) { resolve(null); return; }
-    let settled = false;
-    const timer = setTimeout(() => settle(null), 3500);
-    function settle(token) {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      _reauthResolve = null;
-      resolve(token);
-    }
-    _reauthResolve = settle;
-    try {
-      google.accounts.id.prompt();
-    } catch {
-      settle(null);
-    }
-  });
-}
-
+// Exchange the one-time Google credential for an app session token, then enter the app.
 function handleGoogleCredential(resp) {
-  const payload = decodeJwtPayload(resp.credential);
-  A.me = payload.name || payload.email || '';
-  A.userEmail = payload.email || '';
-  A.idToken = resp.credential;
-  saveSession(A.me, A.userEmail, A.fd.shop, A.idToken);
-
-  if (_reauthResolve) {
-    // A silent token refresh was in flight — resolve it without resetting
-    // the dashboard/app screen the user is already looking at.
-    const resolve = _reauthResolve;
-    _reauthResolve = null;
-    resolve(resp.credential);
-    return;
-  }
-
-  enterApp(A.me);
+  apiAuthenticate(resp.credential)
+    .then(result => {
+      A.me = result.name;
+      A.userEmail = result.email;
+      A.sessionToken = result.sessionToken;
+      saveSession(A.me, A.userEmail, A.fd.shop, A.sessionToken);
+      enterApp(A.me);
+    })
+    .catch(err => {
+      // AUTH_DENIED → not allow-listed; anything else → generic sign-in failure.
+      // Either way stay on the login screen (do not enterApp).
+      showSignInWarn(err && err.authCode === 'AUTH_DENIED' ? 'errAuthDenied' : 'googleSignInError');
+    });
 }
 
 function showSignInWarn(key) {
@@ -1704,10 +1668,13 @@ async function init() {
   initGoogleSignIn();
 
   const session = loadSession();
-  if (session?.name && session?.email) {
+  if (session?.name && session?.email && session?.sessionToken) {
+    // Returning user within the 30-day window — restore optimistically.
+    // The first data fetch validates the token; if it's expired the
+    // normal AUTH_EXPIRED handler drops back to the login screen.
     A.me = session.name;
     A.userEmail = session.email;
-    A.idToken = session.idToken || null;
+    A.sessionToken = session.sessionToken;
     selectBranchSegment(session.shop);
     enterApp(session.name);
     return;
@@ -1730,7 +1697,7 @@ function doLogout() {
   clearSession();
   A.me = null;
   A.userEmail = '';
-  A.idToken = null;
+  A.sessionToken = null;
   A.fd.shop = BRANCHES[0];
   if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect();
   showScr('scr-login');
@@ -1740,7 +1707,7 @@ function forceReLogin() {
   clearSession();
   A.me = null;
   A.userEmail = '';
-  A.idToken = null;
+  A.sessionToken = null;
   if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect();
   showScr('scr-login');
 }

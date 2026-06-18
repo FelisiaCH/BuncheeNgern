@@ -18,12 +18,12 @@ const ENTRY_HEADERS = ['Timestamp', 'Staff Name', 'Item Name', 'Currency',
 
 function ss() { return SpreadsheetApp.openById(SPREADSHEET_ID); }
 
-// 🌐 GET Router
+// 🌐 GET Router — reads only; requires a valid app session token
 function doGet(e) {
   try {
-    const auth = verifyGoogleToken(e.parameter.idToken);
-    if (!auth) return respond({ error: 'AUTH_EXPIRED' });
-    if (checkWhitelist(auth.email) !== 'allow') return respond({ error: 'AUTH_DENIED' });
+    const session = validateSession(e.parameter.sessionToken);
+    if (!session) return respond({ error: 'AUTH_EXPIRED' });
+    if (checkWhitelist(session.email) !== 'allow') return respond({ error: 'AUTH_DENIED' });
 
     const action = e.parameter.action;
     switch (action) {
@@ -41,11 +41,22 @@ function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
 
-    const auth = verifyGoogleToken(data.idToken);
-    if (!auth) return respond({ error: 'AUTH_EXPIRED' });
-    if (checkWhitelist(auth.email) !== 'allow') return respond({ error: 'AUTH_DENIED' });
-    data.userEmail = auth.email; // verified identity — discard any client-supplied value
-    data.staffName = auth.name;  // verified identity — discard any client-supplied value
+    // 'authenticate' is the only action that runs before a session exists:
+    // verify the one-time Google id_token, then mint an app session token.
+    if (data.action === 'authenticate') {
+      const auth = verifyGoogleToken(data.idToken);
+      if (!auth) return respond({ error: 'AUTH_EXPIRED' });
+      if (checkWhitelist(auth.email) !== 'allow') return respond({ error: 'AUTH_DENIED' });
+      const sessionToken = createSession(auth.email, auth.name);
+      return respond({ ok: true, sessionToken, name: auth.name, email: auth.email });
+    }
+
+    // Every other action requires a valid, non-expired app session token.
+    const session = validateSession(data.sessionToken);
+    if (!session) return respond({ error: 'AUTH_EXPIRED' });
+    if (checkWhitelist(session.email) !== 'allow') return respond({ error: 'AUTH_DENIED' });
+    data.userEmail = session.email; // verified identity from the session row — never client input
+    data.staffName = session.name;  // verified identity from the session row — never client input
 
     switch (data.action) {
       case 'submitEntry': return respond(submitEntry(data));
@@ -130,6 +141,75 @@ function checkWhitelist(email) {
     return 'deny';
   } finally {
     lock.releaseLock();
+  }
+}
+
+// 🪪 App-managed sessions — sheet tab 'Sessions': Token | Email | Name | Created | Expires
+// After a one-time Google sign-in the backend mints its own token with a 30-day
+// rolling expiry; the frontend then uses that token instead of the short-lived id_token.
+const SESSION_TTL_MS  = 30 * 24 * 60 * 60 * 1000; // 30 days
+const SESSIONS_TAB     = 'Sessions';
+const SESSION_HEADERS  = ['Token', 'Email', 'Name', 'Created', 'Expires'];
+
+function getSessionsSheet() {
+  const existing = ss().getSheetByName(SESSIONS_TAB);
+  if (existing) return existing;
+  const sheet = ss().insertSheet(SESSIONS_TAB);
+  sheet.getRange(1, 1, 1, SESSION_HEADERS.length)
+       .setValues([SESSION_HEADERS])
+       .setFontWeight('bold');
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
+function createSession(email, name) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const sheet = getSessionsSheet();
+    purgeExpiredSessions(sheet);
+    const token   = Utilities.getUuid() + Utilities.getUuid().replace(/-/g, '');
+    const now     = new Date();
+    const expires = new Date(now.getTime() + SESSION_TTL_MS);
+    sheet.appendRow([token, String(email || '').trim().toLowerCase(), name, now, expires]);
+    return token;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function validateSession(token) {
+  if (!token) return null;
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const sheet = getSessionsSheet();
+    const rows  = sheet.getDataRange().getValues();
+    const now   = new Date();
+    for (let i = 1; i < rows.length; i++) {
+      if (String(rows[i][0]) !== String(token)) continue;
+      const expires = rows[i][4] instanceof Date ? rows[i][4] : new Date(rows[i][4]);
+      if (isNaN(expires.getTime()) || expires.getTime() <= now.getTime()) return null;
+      // Roll the expiry forward so active users stay signed in
+      sheet.getRange(i + 1, 5).setValue(new Date(now.getTime() + SESSION_TTL_MS));
+      return { email: String(rows[i][1] || ''), name: String(rows[i][2] || '') };
+    }
+    return null;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Delete expired/invalid session rows (bottom-up so indices stay valid).
+// Called from createSession only, to keep validateSession fast.
+function purgeExpiredSessions(sheet) {
+  const rows = sheet.getDataRange().getValues();
+  const now  = new Date().getTime();
+  for (let i = rows.length - 1; i >= 1; i--) {
+    const expires = rows[i][4] instanceof Date ? rows[i][4] : new Date(rows[i][4]);
+    if (isNaN(expires.getTime()) || expires.getTime() <= now) {
+      sheet.deleteRow(i + 1);
+    }
   }
 }
 
