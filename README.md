@@ -17,7 +17,7 @@ Buncheengern is a zero-dependency, single-file PWA for tracking income and expen
 
 Sign-in is enforced server-side, not just in the browser. Google verifies your identity **once**; the backend then mints its own **device-bound session token** (stored in a `Sessions` sheet tab) with a **30-day rolling expiry**, and every later request carries that session token instead of the Google token. Each request re-checks the token's email against a Google Sheet allow-list — so revoking someone takes effect immediately, even mid-session — and the recorded author's email and name come from the verified session, not whatever the client claims, so entries can't be misattributed. Slip uploads and free-text input are also re-validated server-side, independent of what the browser already enforced.
 
-See [docs/SETUP.md#security](docs/SETUP.md#security) for the full breakdown.
+See [docs/SETUP.md#security](docs/SETUP.md#security) for the full breakdown, and [SECURITY.md](SECURITY.md) for the security policy, threat model, and how to report a vulnerability.
 
 ## Architecture
 
