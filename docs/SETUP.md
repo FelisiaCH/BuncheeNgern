@@ -52,7 +52,7 @@ There are **seven** placeholder values to fill in before the app works:
 8. Copy the **Web app URL** (ends in `/exec`). You'll paste it into `index.html` as `SCRIPT_URL`.
 
 > **Every time you edit `Code.gs` (or `appsscript.json`), you must ship a new deployment version** — go to **Deploy ▸ Manage deployments ▸ edit (pencil) ▸ Version: New version ▸ Deploy**. Editing the script alone does *not* update the live `/exec` URL's behavior.
-
+>
 > **"Who has access: Anyone" no longer means anyone can use the app.** This setting only controls whether Apps Script redirects unauthenticated requests to a Google login page (it must stay "Anyone" so the Web App responds directly). Actual access control happens inside the script itself — every request is verified against Google and checked against the `AllowedUsers` sheet tab (see below) before any data is read or written.
 
 ### What the backend exposes
