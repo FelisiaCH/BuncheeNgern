@@ -1195,6 +1195,8 @@ function applyTranslations() {
   renderBranchSegments();
   renderBranchFilters();
   renderManageBranchesList();
+  renderManageCurrenciesList();
+  renderCurrencyPicker($('cur-picker-search')?.value || '');
 
   if (!$('scr-app').classList.contains('hidden')) {
     $('f-date-lbl').textContent = fmtDateTab(new Date());
