@@ -70,7 +70,7 @@ body{
   transition:background var(--ease),color var(--ease)
 }
 input,select,button{font-family:'Outfit',system-ui,sans-serif}
-button{cursor:pointer}
+button{cursor:pointer;touch-action:manipulation}
 .hidden{display:none!important}
 .screen{min-height:100dvh;display:flex;flex-direction:column}
 
@@ -100,7 +100,8 @@ button{cursor:pointer}
   border-radius:12px;padding:12px 22px;color:var(--green);
   font-size:13px;font-weight:600;
   display:flex;align-items:center;gap:8px;z-index:9999;
-  opacity:0;pointer-events:none;white-space:nowrap;
+  opacity:0;pointer-events:none;white-space:normal;
+  max-width:min(92vw,440px);text-align:center;
   box-shadow:var(--shadow);transition:opacity .25s,transform .25s
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -166,14 +167,14 @@ button{cursor:pointer}
 /* 📋 Form Fields & Inputs */
 .fg{margin-bottom:16px}
 .fl{
-  display:block;font-size:10.5px;font-weight:700;
+  display:block;font-size:12px;font-weight:700;
   color:var(--txt-sub);text-transform:uppercase;
   letter-spacing:.85px;margin-bottom:8px
 }
 .fi{
   width:100%;padding:13px 15px;
   background:var(--bg-input);border:1px solid var(--brd);
-  border-radius:var(--r-sm);color:var(--txt);font-size:15px;
+  border-radius:var(--r-sm);color:var(--txt);font-size:16px;
   font-weight:400;outline:none;
   transition:border-color var(--ease),box-shadow var(--ease);
   -webkit-appearance:none;appearance:none
@@ -183,7 +184,7 @@ button{cursor:pointer}
 .fs{
   width:100%;padding:13px 38px 13px 15px;
   background:var(--bg-input);border:1px solid var(--brd);
-  border-radius:var(--r-sm);color:var(--txt);font-size:15px;
+  border-radius:var(--r-sm);color:var(--txt);font-size:16px;
   font-weight:400;outline:none;-webkit-appearance:none;appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7FA3' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 12px center;background-size:16px;
@@ -264,13 +265,13 @@ option{background:#0E1526}
 .cur-sel{
   padding:13px 10px;background:rgba(46,232,180,.07);
   border:none;border-right:1px solid var(--brd);
-  color:var(--teal);font-size:13px;font-weight:700;
+  color:var(--teal);font-size:16px;font-weight:700;
   font-family:'Outfit',system-ui,sans-serif;
   outline:none;-webkit-appearance:none;appearance:none;
   min-width:74px;text-align:center;text-align-last:center;cursor:pointer
 }
 .prc-in{
-  flex:1;padding:13px 14px;background:transparent;border:none;
+  flex:1;min-width:0;padding:13px 14px;background:transparent;border:none;
   color:var(--txt);font-size:16px;font-weight:500;
   font-family:'Outfit',system-ui,sans-serif;outline:none
 }
@@ -302,7 +303,7 @@ option{background:#0E1526}
 }
 .uz-ico{margin:0 auto 10px;color:var(--teal);opacity:.7}
 .uz-txt{font-size:14px;font-weight:500;color:var(--txt-sub);margin-bottom:3px}
-.uz-hint{font-size:11.5px;color:var(--txt-muted)}
+.uz-hint{font-size:12px;color:var(--txt-muted)}
 .slip-prev{
   width:100%;border-radius:var(--r-xs);max-height:200px;
   object-fit:cover;display:block;margin-top:12px
@@ -336,7 +337,7 @@ option{background:#0E1526}
   border-radius:20px;padding:5px 12px 5px 8px;
   font-size:12px;font-weight:500;color:var(--txt-sub);
   display:flex;align-items:center;gap:6px;
-  max-width:148px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+  max-width:min(32vw,148px);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
 }
 .chip-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0}
 .lo-btn{
@@ -358,7 +359,7 @@ option{background:#0E1526}
 }
 .tab-ttl{font-size:21px;font-weight:800;letter-spacing:-.6px}
 .date-chip{
-  font-size:11px;font-weight:600;color:var(--txt-sub);
+  font-size:12px;font-weight:600;color:var(--txt-sub);
   background:var(--bg-card);border:1px solid var(--brd);
   border-radius:20px;padding:4px 12px;white-space:nowrap
 }
@@ -382,7 +383,7 @@ option{background:#0E1526}
 .nb{
   flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
   padding:10px 8px;background:none;border:none;border-radius:13px;
-  color:var(--txt-muted);font-size:10.5px;font-weight:600;
+  color:var(--txt-muted);font-size:11.5px;font-weight:600;
   font-family:'Outfit',system-ui,sans-serif;cursor:pointer;
   transition:background var(--ease),color var(--ease),border-color var(--ease),transform var(--ease),opacity var(--ease)
 }
@@ -395,7 +396,7 @@ option{background:#0E1526}
 .mc{
   background:var(--bg-card);border:1px solid var(--brd);
   border-radius:var(--r);padding:18px 16px;
-  position:relative;overflow:hidden
+  position:relative;overflow:hidden;min-width:0
 }
 .mc::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px
@@ -405,18 +406,18 @@ option{background:#0E1526}
 .mc.r{grid-column:1/-1}
 .mc.r::before{background:linear-gradient(90deg,var(--red),transparent 80%)}
 .mc-lbl{
-  font-size:10px;font-weight:700;color:var(--txt-sub);
+  font-size:12px;font-weight:700;color:var(--txt-sub);
   text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px
 }
 .mc-val{
-  font-size:30px;font-weight:900;letter-spacing:-1.5px;line-height:1;
-  font-variant-numeric:tabular-nums
+  font-size:clamp(22px,7vw,30px);font-weight:900;letter-spacing:-1.5px;line-height:1;
+  font-variant-numeric:tabular-nums;word-break:break-word
 }
 .mc-val.gv{color:var(--green)}
 .mc-val.pv{color:var(--indigo)}
 .mc-val.rv{color:var(--red)}
-.mc.r .mc-val{font-size:36px}
-.mc-cur{font-size:11.5px;font-weight:600;color:var(--txt-sub);margin-top:6px}
+.mc.r .mc-val{font-size:clamp(26px,9vw,36px)}
+.mc-cur{font-size:12px;font-weight:600;color:var(--txt-sub);margin-top:6px}
 
 /* 📜 Recent Entries List */
 .sec-top{
@@ -427,7 +428,7 @@ option{background:#0E1526}
 .cnt-badge{
   padding:3px 11px;background:var(--bg-hover);
   border:1px solid var(--brd);border-radius:20px;
-  font-size:11px;font-weight:600;color:var(--txt-sub)
+  font-size:12px;font-weight:600;color:var(--txt-sub)
 }
 .elist{display:flex;flex-direction:column;gap:8px}
 .ei{
@@ -447,19 +448,19 @@ option{background:#0E1526}
   font-size:14px;font-weight:600;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
-.ei-meta{font-size:11.5px;color:var(--txt-sub);margin-top:2px;line-height:1.6}
+.ei-meta{font-size:12px;color:var(--txt-sub);margin-top:2px;line-height:1.6}
 .ei-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .ei-amt{font-size:15px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
 .ei-amt.inc{color:var(--green)}
 .ei-amt.exp{color:var(--red)}
 .pm-b{
-  font-size:10px;font-weight:700;padding:3px 8px;
+  font-size:11px;font-weight:700;padding:3px 8px;
   border-radius:6px;letter-spacing:.4px;text-transform:uppercase
 }
 .pm-cash{background:var(--amber-dim);color:var(--amber)}
 .pm-qr{background:var(--teal-dim);color:var(--teal)}
 .slip-a{
-  font-size:11px;font-weight:600;color:var(--teal);text-decoration:none;
+  font-size:12px;font-weight:600;color:var(--teal);text-decoration:none;
   display:inline-flex;align-items:center;gap:3px;margin-top:3px
 }
 .empty{
@@ -488,13 +489,13 @@ option{background:#0E1526}
 /* 💱 Currency Tab Switcher */
 .cur-tabs{display:flex;gap:6px;margin-bottom:14px}
 .ctab{
-  flex:1;padding:10px 6px;
+  flex:1;min-width:0;padding:10px 6px;
   background:var(--bg-card);border:1px solid var(--brd);
   border-radius:var(--r-sm);color:var(--txt-sub);
   font-size:13.5px;font-weight:700;
   font-family:'Outfit',system-ui,sans-serif;
   cursor:pointer;transition:background var(--ease),color var(--ease),border-color var(--ease),transform var(--ease),opacity var(--ease);text-align:center;
-  letter-spacing:.3px;opacity:.55
+  letter-spacing:.3px;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
 .ctab.on{background:var(--teal-dim);border-color:var(--teal-brd);color:var(--teal);opacity:1}
 .ctab.has{opacity:1}
@@ -578,7 +579,7 @@ option{background:#0E1526}
   margin-top:20px;padding-top:20px;border-top:1px solid var(--brd)
 }
 .settings-lbl{
-  font-size:10px;font-weight:700;color:var(--txt-sub);
+  font-size:12px;font-weight:700;color:var(--txt-sub);
   text-transform:uppercase;letter-spacing:.8px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap
 }
@@ -616,7 +617,7 @@ option{background:#0E1526}
 }
 .branch-del-btn:hover{background:var(--red-dim);border-color:var(--red-brd);color:var(--red)}
 .branch-del-btn:active{transform:scale(.9)}
-.branch-empty-hint{font-size:11.5px;color:var(--txt-muted);text-align:center;padding:6px 0}
+.branch-empty-hint{font-size:12px;color:var(--txt-muted);text-align:center;padding:6px 0}
 .branch-add-row{display:flex;flex-direction:column;gap:8px}
 .branch-add-row .fi{width:100%}
 
@@ -638,7 +639,7 @@ option{background:#0E1526}
   border:1px solid var(--brd);border-radius:var(--r-sm)
 }
 .cur-region-hdr{
-  font-size:10.5px;font-weight:700;letter-spacing:.6px;
+  font-size:12px;font-weight:700;letter-spacing:.6px;
   color:var(--txt-muted);text-transform:uppercase;
   padding:8px 12px 4px;background:var(--bg);
   position:sticky;top:0;z-index:1
@@ -659,11 +660,11 @@ option{background:#0E1526}
 .cur-row-info{flex:1;min-width:0}
 .cur-row-code{font-size:13px;font-weight:700}
 .cur-row-name{
-  font-size:11px;color:var(--txt-sub);
+  font-size:12px;color:var(--txt-sub);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
 .cur-added-badge{
-  font-size:10px;font-weight:700;padding:2px 8px;
+  font-size:11px;font-weight:700;padding:2px 8px;
   background:var(--teal-dim);color:var(--teal);
   border-radius:6px;flex-shrink:0
 }
@@ -686,9 +687,47 @@ option{background:#0E1526}
   animation-delay:50ms
 }
 
+/* 👆 Tap feedback — subtle press scale (touch devices have no hover) */
+.seg:active,.branch-chip:active,.nb:active,.sf:active,.ctab:active,.lang-btn:active,
+.icon-btn:active,.nav-arrow:active:not(:disabled),.lo-btn:active,.combo-toggle:active,
+.cur-remove-btn:active,.combo-opt:active{transform:scale(.96)}
+
+/* 📱 Phones — comfortable ~44px tap targets (Apple/Google HIG) without enlarging desktop */
+@media (max-width:480px){
+  .seg{min-height:44px}
+  .nb{min-height:50px}
+  .branch-chip,.sf,.ctab,.lang-btn,.ref-btn{min-height:40px}
+  .nav-arrow{width:40px;height:40px}
+  .icon-btn{width:42px;height:42px}
+  .lo-btn{min-width:42px;min-height:42px;justify-content:center}
+  .combo-toggle{width:46px}
+  .branch-del-btn{width:36px;height:36px}
+  .cur-remove-btn{min-width:44px}
+  .clear-slip-btn{padding:9px 16px}
+}
+
+/* 📐 Small phones (~320–360px) — tighten spacing so nothing overflows */
+@media (max-width:360px){
+  .tab-body{padding:70px 12px calc(94px + env(safe-area-inset-bottom))}
+  .app-hdr{padding:0 12px}
+  .hdr-name{font-size:14px}
+  .user-chip{max-width:92px;padding:5px 9px 5px 7px}
+  .dash-grid{gap:8px}
+  .mc{padding:15px 13px}
+  .branch-chip{padding:9px 11px}
+  .login-card{padding:32px 18px 26px}
+  .lc-title{font-size:20px}
+  .bot-nav{padding:6px 14px}
+}
+
 @media(prefers-reduced-motion:reduce){
   .tab-body.tab-enter,.ei,.combo-drop:not(.hidden),
   .ov:not(.hidden),.ov-card,.toast-check{animation:none!important}
+  /* also neutralize the tap-scale feedback under reduced-motion */
+  .seg:active,.branch-chip:active,.nb:active,.sf:active,.ctab:active,.lang-btn:active,
+  .icon-btn:active,.nav-arrow:active:not(:disabled),.lo-btn:active,.combo-toggle:active,
+  .cur-remove-btn:active,.combo-opt:active,.btn:active:not(:disabled),.ref-btn:active,
+  .menu-action-btn:active,.branch-del-btn:active{transform:none}
 }
 </style>
 </head>
