@@ -281,8 +281,11 @@ option{background:#0E1526}
 .prc-in[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 /* ➕ Multi-Currency Repeater */
-.cur-line{display:flex;gap:8px;margin-top:8px;align-items:stretch}
-.cur-line .pg{flex:1}
+/* Stack vertically so the payment buttons (.seg-wrap) get a full-width row and
+   their labels never truncate; the currency field + remove button share the top row. */
+.cur-line{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.cur-line-top{display:flex;gap:8px;align-items:stretch}
+.cur-line-top .pg{flex:1}
 .cur-remove-btn{
   flex:0 0 auto;width:42px;border:1px solid var(--brd);
   background:var(--bg-input);border-radius:var(--r-sm);
@@ -2030,18 +2033,21 @@ function renderCurLines() {
     const row = document.createElement('div');
     row.className = 'cur-line';
     row.innerHTML = `
-      <div class="pg">
-        <select class="cur-sel" id="x-cur-sel-${i}" name="x-cur-sel-${i}" aria-label="${esc(t('ariaCurrency'))}">
-          ${CURRENCIES.map(c => `<option value="${c.code}"${c.code === line.currency ? ' selected' : ''}>${c.code} ${c.symbol}</option>`).join('')}
-        </select>
-        <input type="number" class="prc-in" id="x-cur-price-${i}" name="x-cur-price-${i}" placeholder="0" inputmode="decimal" min="0" step="any" value="${line.price ?? ''}">
+      <div class="cur-line-top">
+        <div class="pg">
+          <select class="cur-sel" id="x-cur-sel-${i}" name="x-cur-sel-${i}" aria-label="${esc(t('ariaCurrency'))}">
+            ${CURRENCIES.map(c => `<option value="${c.code}"${c.code === line.currency ? ' selected' : ''}>${c.code} ${c.symbol}</option>`).join('')}
+          </select>
+          <input type="number" class="prc-in" id="x-cur-price-${i}" name="x-cur-price-${i}" placeholder="0" inputmode="decimal" min="0" step="any" value="${line.price ?? ''}">
+        </div>
+        <button type="button" class="cur-remove-btn" aria-label="${esc(t('ariaRemoveCurrency'))}">✕</button>
       </div>
-      <div class="seg-wrap" style="margin-top:8px">
+      <div class="seg-wrap">
         <button class="seg cash${line.pay==='Cash'?' on':''}" type="button">💵 <span>${esc(t('payCash'))}</span></button>
         <button class="seg qr${line.pay==='Online'?' on':''}" type="button">📱 <span>${esc(t('payQR'))}</span></button>
         <button class="seg split${line.pay==='Split'?' on':''}" type="button">✂️ <span>${esc(t('paySplit'))}</span></button>
       </div>
-      <div class="split-grp${line.pay==='Split'?'':' hidden'}" style="margin-top:8px">
+      <div class="split-grp${line.pay==='Split'?'':' hidden'}">
         <div class="pg" style="margin-bottom:6px">
           <span class="cur-sel" style="pointer-events:none;color:var(--amber)">💵</span>
           <input type="number" class="prc-in split-cash-in" id="x-split-cash-${i}" name="x-split-cash-${i}" placeholder="${esc(t('labelSplitCash'))}" inputmode="decimal" min="0" step="any" value="${line.splitCash ?? ''}">
@@ -2051,7 +2057,6 @@ function renderCurLines() {
           <input type="number" class="prc-in split-online-in" id="x-split-online-${i}" name="x-split-online-${i}" placeholder="${esc(t('labelSplitOnline'))}" inputmode="decimal" min="0" step="any" value="${line.splitOnline ?? ''}">
         </div>
       </div>
-      <button type="button" class="cur-remove-btn" aria-label="${esc(t('ariaRemoveCurrency'))}">✕</button>
     `;
     const sel          = row.querySelector('select');
     const input        = row.querySelector('.prc-in');
